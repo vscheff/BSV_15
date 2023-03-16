@@ -1,3 +1,3 @@
 # BSV_15
 ***
-Backtracking 15-Puzzle Solver
+Branch and Bound algorithm for solving the 15-Puzzle
