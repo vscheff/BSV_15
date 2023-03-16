@@ -1,5 +1,10 @@
+from puzzle import Puzzle
+
+
 def main():
-    pass
+    puzzle = Puzzle()
+    puzzle.randomize()
+    puzzle.print_puzzle()
 
 
 if __name__ == "__main__":
