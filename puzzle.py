@@ -55,3 +55,13 @@ class Puzzle:
                             self.grid[i][j] = self.grid[i][j+1]
                             self.grid[i][j+1] = 0
                     return
+
+
+    # chek if a 15 puzzle is solvable or not
+    def is_solvable(self, sequence):
+        inversions = 0
+        for i in range(15):
+            for j in range(i+1, 16):
+                if sequence[i] > sequence[j]:
+                    inversions += 1
+        return inversions % 2 == 0
