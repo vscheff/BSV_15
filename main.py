@@ -4,8 +4,12 @@ from puzzle import Puzzle
 def main():
     puzzle = Puzzle()
     puzzle.randomize()
-    puzzle.print_puzzle()
-    print(f"\nPuzzle is solved: {puzzle.is_solution()}")
+
+    while not puzzle.is_solvable():
+        print(puzzle)
+        puzzle.randomize()
+
+    print(f"{puzzle}\nPuzzle is solved: {puzzle.is_solution()}")
 
     k = 1
     for i in range(4):
@@ -13,9 +17,8 @@ def main():
             puzzle.grid[i][j] = k
             k += 1
     puzzle.grid[-1][-1] = 0
-    print()
-    puzzle.print_puzzle()
-    print(f"\nPuzzle is solved: {puzzle.is_solution()}")
+
+    print(f"\n{puzzle}\nPuzzle is solved: {puzzle.is_solution()}")
 
 
 if __name__ == "__main__":
