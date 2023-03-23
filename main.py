@@ -6,7 +6,7 @@ def main():
     puzzle.randomize()
 
     while not puzzle.is_solvable():
-        print(puzzle)
+        print(f"{puzzle}\nis not solvable. Trying again...")
         puzzle.randomize()
 
     print(f"{puzzle}\nPuzzle is solved: {puzzle.is_solution()}")
