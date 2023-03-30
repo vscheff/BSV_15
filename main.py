@@ -11,9 +11,9 @@ def main():
 
     print(f"{puzzle}\n")
 
-    puzzle = solve_puzzle(puzzle)
+    solution = solve_puzzle(puzzle)
 
-    print(f"{puzzle}\nPuzzle is solved: {puzzle.is_solution()}")
+    print(f"{solution}\nPuzzle is solved: {solution.is_solution()}")
 
     k = 1
     for i in range(4):
@@ -31,20 +31,22 @@ def solve_puzzle(puzzle: Puzzle):
     current_node = puzzle 
     checked_boards = {str(current_node.board): True}
 
-    while not current_node.is_solution() and live_nodes.nodes:
+    while live_nodes.nodes:
         current_node = live_nodes.pop_root()
-        
-        print(f"\nCurrent Node (Cost={current_node.cost}):\n{current_node}")
 
-        checked_boards[str(current_node.board)] = True
+        if current_node.is_solution():
+            return current_node
+
+        print(f"\nCurrent Node (Cost={current_node.cost}):\n{current_node}")
 
         for direction in (UP, DOWN, LEFT, RIGHT):
             new_board = current_node.move(direction)
             if new_board and str(new_board) not in checked_boards:
                 live_nodes.insert(Puzzle(new_board, current_node.moves + 1))
                 checked_boards[str(new_board)] = True
+    
+    print("No solution found! Are you sure the puzzle was solvable?")
 
-    return current_node
 
 
 if __name__ == "__main__":
