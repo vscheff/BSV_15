@@ -16,7 +16,6 @@ class Puzzle:
         self.moves = depth
         self.cost = depth + self.count_bad_tiles()
         self.x_pos = None
-        self.x_changed = False
 
     def __str__(self):
         ret_arr = []
@@ -29,7 +28,10 @@ class Puzzle:
         return "".join(ret_arr[:-1])
 
     def __lt__(self, other):
-        return self.cost < other.cost
+        if self.cost != other.cost:
+            return self.cost < other.cost
+
+        return self.inv_count() < other.inv_count()
 
     # Checks if the current board is the solution board
     def is_solution(self):
@@ -61,8 +63,9 @@ class Puzzle:
         for i in range(4):
             for j in range(4):
                 self.board[i][j] = sequence.pop()
-
-        self.x_changed = True
+        
+        self.depth = 0
+        self.cost = self.count_bad_tiles()
 
     def move(self, direction):
         # find the empty space
@@ -75,31 +78,29 @@ class Puzzle:
                     if direction == UP:
                         if i > 0:
                             new_board = deepcopy(self.board)
-                            new_board[i][j] = new_board[i-1][j]
-                            new_board[i-1][j] = 0
-                        else:
-                            return None
+                            new_board[i][j] = new_board[i - 1][j]
+                            new_board[i - 1][j] = 0
+                            return new_board
                     elif direction == DOWN:
                         if i < 3:
                             new_board = deepcopy(self.board)
-                            self.board[i][j] = self.board[i+1][j]
-                            self.board[i+1][j] = 0
-                        else:
-                            return None
+                            new_board[i][j] = new_board[i + 1][j]
+                            new_board[i + 1][j] = 0
+                            return new_board
                     elif direction == LEFT:
                         if j > 0:
                             new_board = deepcopy(self.board)
-                            new_board[i][j] = new_board[i][j-1]
+                            new_board[i][j] = new_board[i][j - 1]
                             new_board[i][j - 1] = 0
-                        else:
-                            return None
+                            return new_board
                     elif direction == RIGHT:
                         if j < 3:
                             new_board = deepcopy(self.board)
-                            new_board[i][j] = new_board[i][j+1]
+                            new_board[i][j] = new_board[i][j + 1]
                             new_board[i][j + 1] = 0
-                        else:
-                            return None
+                            return new_board
+                    
+                    return None
 
     def count_bad_tiles(self):
         count = 0
@@ -130,11 +131,6 @@ class Puzzle:
 
     # find position of blank tile
     def find_x_pos(self):
-        if not self.x_changed:
-            return self.x_pos
-
-        self.x_changed = False
-
         for i in range(4):
             for j in range(4):
                 if self.board[i][j] == 0:

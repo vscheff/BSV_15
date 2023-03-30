@@ -33,13 +33,16 @@ def solve_puzzle(puzzle: Puzzle):
 
     while not current_node.is_solution() and live_nodes.nodes:
         current_node = live_nodes.pop_root()
+        
+        print(f"\nCurrent Node (Cost={current_node.cost}):\n{current_node}")
+
         checked_boards[str(current_node.board)] = True
 
         for direction in (UP, DOWN, LEFT, RIGHT):
             new_board = current_node.move(direction)
             if new_board and str(new_board) not in checked_boards:
-                live_nodes.insert(Puzzle(up, current_nodes.moves + 1))
-                checked_nodes[str(new_board)] = True
+                live_nodes.insert(Puzzle(new_board, current_node.moves + 1))
+                checked_boards[str(new_board)] = True
 
     return current_node
 
