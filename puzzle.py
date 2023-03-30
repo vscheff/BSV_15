@@ -1,15 +1,22 @@
 from random import shuffle
+from copy import deepcopy
 
+
+UP = 0
+DOWN = 1
+LEFT = 2
+RIGHT = 3
 
 solution_sequence = list(range(1, 16)) + [0]
 
 
 class Puzzle:
-    def __init__(self):
-        self.board = [[None for _ in range(4)] for _ in range(4)]
+    def __init__(self, board=None, depth=0):
+        self.board = board if board else [[-1 for _ in range(4)] for _ in range(4)]
+        self.moves = depth
+        self.cost = depth + self.count_bad_tiles()
         self.x_pos = None
         self.x_changed = False
-        self.cost = None
 
     def __str__(self):
         ret_arr = []
@@ -20,6 +27,9 @@ class Puzzle:
             ret_arr.append('\n')
 
         return "".join(ret_arr[:-1])
+
+    def __lt__(self, other):
+        return self.cost < other.cost
 
     # Checks if the current board is the solution board
     def is_solution(self):
@@ -34,7 +44,7 @@ class Puzzle:
     # check if a 15 puzzle is solvable or not
     def is_solvable(self):
         inversions = self.inv_count()
-        x_pos = self.find_blank()
+        x_pos = self.find_x_pos()
 
         print(f"\nNumber of inversions: {inversions}\n")
 
@@ -62,27 +72,45 @@ class Puzzle:
                     # move it in the given direction
                     # if the move is not possible, don't do anything
                     # if the move is possible, swap the values
-                    if direction == 'up':
+                    if direction == UP:
                         if i > 0:
-                            self.board[i][j] = self.board[i-1][j]
-                            self.board[i-1][j] = 0
-                            self.x_changed = True
-                    elif direction == 'down':
+                            new_board = deepcopy(self.board)
+                            new_board[i][j] = new_board[i-1][j]
+                            new_board[i-1][j] = 0
+                        else:
+                            return None
+                    elif direction == DOWN:
                         if i < 3:
+                            new_board = deepcopy(self.board)
                             self.board[i][j] = self.board[i+1][j]
                             self.board[i+1][j] = 0
-                            self.x_changed = True
-                    elif direction == 'left':
+                        else:
+                            return None
+                    elif direction == LEFT:
                         if j > 0:
-                            self.board[i][j] = self.board[i][j-1]
-                            self.board[i][j - 1] = 0
-                            self.x_changed = True
-                    elif direction == 'right':
+                            new_board = deepcopy(self.board)
+                            new_board[i][j] = new_board[i][j-1]
+                            new_board[i][j - 1] = 0
+                        else:
+                            return None
+                    elif direction == RIGHT:
                         if j < 3:
-                            self.board[i][j] = self.board[i][j+1]
-                            self.board[i][j + 1] = 0
-                            self.x_changed = True
-                    return
+                            new_board = deepcopy(self.board)
+                            new_board[i][j] = new_board[i][j+1]
+                            new_board[i][j + 1] = 0
+                        else:
+                            return None
+
+    def count_bad_tiles(self):
+        count = 0
+        k = 0
+        for i in range(4):
+            for j in range(4):
+                if self.board[i][j] != solution_sequence[k]:
+                    count += 1
+                k += 1
+        return count
+
 
     # find number of inversions in 15 puzzle
     def inv_count(self):
@@ -101,7 +129,7 @@ class Puzzle:
         return inversions
 
     # find position of blank tile
-    def find_blank(self):
+    def find_x_pos(self):
         if not self.x_changed:
             return self.x_pos
 

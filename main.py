@@ -1,5 +1,5 @@
-from puzzle import Puzzle
-
+from puzzle import *
+from minheap import MinHeap
 
 def main():
     puzzle = Puzzle()
@@ -8,6 +8,10 @@ def main():
     while not puzzle.is_solvable():
         print(f"{puzzle}\nis not solvable. Trying again...")
         puzzle.generate()
+
+    print(f"{puzzle}\n")
+
+    puzzle = solve_puzzle(puzzle)
 
     print(f"{puzzle}\nPuzzle is solved: {puzzle.is_solution()}")
 
@@ -19,6 +23,25 @@ def main():
     puzzle.board[-1][-1] = 0
 
     print(f"\n{puzzle}\nPuzzle is solved: {puzzle.is_solution()}")
+
+
+def solve_puzzle(puzzle: Puzzle):
+    live_nodes = MinHeap()
+    live_nodes.insert(puzzle)
+    current_node = puzzle 
+    checked_boards = {str(current_node.board): True}
+
+    while not current_node.is_solution() and live_nodes.nodes:
+        current_node = live_nodes.pop_root()
+        checked_boards[str(current_node.board)] = True
+
+        for direction in (UP, DOWN, LEFT, RIGHT):
+            new_board = current_node.move(direction)
+            if new_board and str(new_board) not in checked_boards:
+                live_nodes.insert(Puzzle(up, current_nodes.moves + 1))
+                checked_nodes[str(new_board)] = True
+
+    return current_node
 
 
 if __name__ == "__main__":
