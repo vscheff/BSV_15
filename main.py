@@ -1,12 +1,7 @@
-from puzzle import *
+# Local dependencies
+from puzzle import UP, DOWN, LEFT, RIGHT, Puzzle
 from minheap import MinHeap
-from os import path
-from sys import platform
-
-if platform == "win32":
-    TEST_DIR = f"{path.dirname(path.realpath(__file__))}\\test_boards\\"
-else:
-    TEST_DIR = f"{path.dirname(path.realpath(__file__))}/test_boards/"
+from input_handler import get_input_puzzle
 
 def main():
     puzzle = get_input_puzzle()
@@ -16,34 +11,6 @@ def main():
     if solution := solve_puzzle(puzzle):
         print(f"\nOutput Puzzle:\n{solution}")
 
-def get_input_puzzle():
-    while True:
-        usr_inp = input("1. Generate a random puzzle\n2. Import a test puzzle\n$ ").strip()
-        if usr_inp == '1':
-            puzzle = Puzzle()
-            puzzle.generate()
-
-            while not puzzle.is_solvable():
-                print(f"{puzzle}\nis not solvable. Trying again...")
-                puzzle.generate()
-
-            return puzzle
-
-        if usr_inp == '2':
-            usr_inp = input("\nEnter filename: ").strip()
-            input_board = []
-
-            try:
-                with open(f"{TEST_DIR}{usr_inp}", "r") as in_file:
-                    for line in in_file:
-                        input_board.append([int(n) for n in line.split()])
-            except FileNotFoundError:
-                print(f"\nERROR: Unable to open {TEST_DIR}{usr_inp}\n")
-                continue
-
-            return Puzzle(board=input_board)
-
-        print("\nPlease input a valid option!\n")
 
 def solve_puzzle(puzzle: Puzzle):
     live_nodes = MinHeap()
@@ -59,7 +26,7 @@ def solve_puzzle(puzzle: Puzzle):
 
         print(f"\nCurrent Node (Cost={current_node.cost}):\n{current_node}")
 
-        for direction in (UP, DOWN, LEFT, RIGHT):
+        for direction in UP, DOWN, LEFT, RIGHT:
             new_board = current_node.move(direction)
             if new_board and str(new_board) not in checked_boards:
                 live_nodes.insert(Puzzle(new_board, current_node.moves + 1))
