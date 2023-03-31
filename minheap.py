@@ -20,6 +20,9 @@ class MinHeap:
     def __len__(self):
         return len(self.nodes)
 
+    def __bool__(self):
+        return bool(self.nodes)
+
     # Swaps the nodes at two given indexes
     # param a - first index
     # param b - second index
@@ -43,16 +46,6 @@ class MinHeap:
         if smallest != index:
             self.swap(index, smallest)
             self.heapify(smallest)
-
-    #  param             index - desired array index to get node from
-    # return              None - if the index is not within range of the nodes array
-    # return self.nodes[index] - if the index is within range of the nodes array
-    def get_node(self, index):
-        if index >= len(self.nodes):
-            print("ERROR: Index out of range.\n")
-            return None
-        
-        return self.nodes[index]
 
     # Inserts a node into the min heap
     # param new_node - pointer to the node which needs to be inserted
@@ -87,4 +80,3 @@ class MinHeap:
     # Clears the heap
     def clear(self):
         self.nodes.clear()
-
