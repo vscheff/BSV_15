@@ -1,8 +1,12 @@
 from puzzle import *
 from minheap import MinHeap
 from os import path
+from sys import platform
 
-TEST_DIR = "test_boards\\"
+if platform == "win32":
+    TEST_DIR = f"{path.dirname(path.realpath(__file__))}\\test_boards\\"
+else:
+    TEST_DIR = f"{path.dirname(path.realpath(__file__))}/test_boards/"
 
 def main():
     puzzle = get_input_puzzle()
@@ -34,7 +38,7 @@ def get_input_puzzle():
                     for line in in_file:
                         input_board.append([int(n) for n in line.split()])
             except FileNotFoundError:
-                print(f"\nERROR: Unable to open {path.dirname(path.realpath(__file__))}\\{TEST_DIR}{usr_inp}\n")
+                print(f"\nERROR: Unable to open {TEST_DIR}{usr_inp}\n")
                 continue
 
             return Puzzle(board=input_board)
