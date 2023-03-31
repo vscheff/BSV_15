@@ -1,14 +1,12 @@
 from random import shuffle
 from copy import deepcopy
 
-
 UP = 0
 DOWN = 1
 LEFT = 2
 RIGHT = 3
 
 solution_sequence = list(range(1, 16)) + [0]
-
 
 class Puzzle:
     def __init__(self, board=None, depth=0):
@@ -31,6 +29,9 @@ class Puzzle:
         if self.cost != other.cost:
             return self.cost < other.cost
 
+        if self.moves != other.moves:
+            return self.moves < other.moves
+
         return self.inv_count() < other.inv_count()
 
     # Checks if the current board is the solution board
@@ -48,8 +49,6 @@ class Puzzle:
         inversions = self.inv_count()
         x_pos = self.find_x_pos()
 
-        print(f"\nNumber of inversions: {inversions}\n")
-
         if x_pos % 2:
             if not inversions % 2:
                 return True
@@ -64,7 +63,7 @@ class Puzzle:
             for j in range(4):
                 self.board[i][j] = sequence.pop()
         
-        self.depth = 0
+        self.moves = 0
         self.cost = self.count_bad_tiles()
 
     def move(self, direction):
@@ -107,11 +106,10 @@ class Puzzle:
         k = 0
         for i in range(4):
             for j in range(4):
-                if self.board[i][j] != solution_sequence[k]:
+                if self.board[i][j] and self.board[i][j] != solution_sequence[k]:
                     count += 1
                 k += 1
         return count
-
 
     # find number of inversions in 15 puzzle
     def inv_count(self):
