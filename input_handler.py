@@ -24,18 +24,14 @@ def get_input_puzzle():
             return puzzle
 
         if usr_inp == '2':
-            input_board = []
             with open_board_file() as in_file:
-                for line in in_file:
-                    try:
-                        input_board.append([int(n) for n in line.split()])
-                    except ValueError:
-                        break
-                else:
-                    return Puzzle(board=input_board)
+                try:
+                    input_board = [[int(i) for i in line.split()] for line in in_file]
+                except ValueError:
+                    print("\nERROR: Selected input file is not formatted correctly.\n")
+                    continue
 
-                print("\nERROR: Selected input file is not formatted correctly.\n")
-                continue
+            return Puzzle(board=input_board)
 
         print("\nPlease input a valid option!\n")
 
