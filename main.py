@@ -26,12 +26,9 @@ def solve_puzzle(puzzle: Puzzle):
         print(f"\nCurrent Node (Cost={current_node.cost}):\n{current_node}")
 
         for direction in UP, DOWN, LEFT, RIGHT:
-            if abs(current_node.prev_dir - direction) == 1:
-                continue
-
             new_board = current_node.move(direction)
             if new_board and str(new_board) not in checked_boards:
-                live_nodes.insert(Puzzle(new_board, direction))
+                live_nodes.insert(Puzzle(new_board))
                 checked_boards[str(new_board)] = True
 
     print("No solution found! Are you sure the puzzle was solvable?")
