@@ -1,19 +1,19 @@
 from random import shuffle
 from copy import deepcopy
 
-UP = 0
-DOWN = 1
-LEFT = 2
-RIGHT = 3
+ROOT_NODE = 0
+UP = 2
+DOWN = 3
+LEFT = 5
+RIGHT = 6
 
 solution_sequence = list(range(1, 16)) + [0]
 
 class Puzzle:
-    def __init__(self, board=None, depth=0):
+    def __init__(self, board=None, prev_dir=ROOT_NODE):
         self.board = board if board else [[-1 for _ in range(4)] for _ in range(4)]
-        self.moves = depth
-        self.cost = depth + self.count_bad_tiles()
-        self.x_pos = None
+        self.cost = self.count_bad_tiles()
+        self.prev_dir = prev_dir
 
     def __str__(self):
         ret_arr = []
@@ -28,9 +28,6 @@ class Puzzle:
     def __lt__(self, other):
         if self.cost != other.cost:
             return self.cost < other.cost
-
-        if self.moves != other.moves:
-            return self.moves < other.moves
 
         return self.inv_count() < other.inv_count()
 
