@@ -10,16 +10,20 @@ solution_sequence = list(range(1, 16)) + [0]
 
 class Puzzle:
     def __init__(self, board=None):
-        self.board = board if board else [[-1 for _ in range(4)] for _ in range(4)]
-        self.cost = self.count_bad_tiles()
-        self.blank_pos = ()
-        self.inversions = None
+        if board is None:
+            self.board = [[-1 for _ in range(4)] for _ in range(4)]
+            self.generate()
+        else:
+            self.board = board
+            self.cost = self.count_bad_tiles()
+            self.blank_pos = self.find_blank_pos()
+            self.inversions = self.count_inversions()
 
     def __str__(self):
         return "\n".join(["".join([f"{str(i):<3}" for i in row]) for row in self.board])
 
     def __lt__(self, other):
-        return self.cost < other.cost if self.cost != other.cost else self.inv_count() < other.inv_count()
+        return self.cost < other.cost if self.cost != other.cost else self.inversions < other.inversions
 
     # Checks if the current board is the solution board
     def is_solution(self):
@@ -27,17 +31,12 @@ class Puzzle:
 
     # check if a 15 puzzle is solvable or not
     def is_solvable(self):
-        inversions = self.inv_count()
-        
-        if not self.blank_pos:
-            self.find_blank_pos()
-
         x_pos = 4 - self.blank_pos[0]
 
         if x_pos % 2:
-            if not inversions % 2:
+            if not self.inversions % 2:
                 return True
-        elif inversions % 2:
+        elif self.inversions % 2:
             return True
         return False
 
@@ -47,15 +46,16 @@ class Puzzle:
         for i in range(4):
             for j in range(4):
                 self.board[i][j] = sequence.pop()
-       
-        self.find_blank_pos()
-        self.inv_count()
-        self.cost = self.count_bad_tiles()
+
+        self.blank_pos = self.find_blank_pos()
+        self.inversions = self.count_inversions()
+        
+        if not self.is_solvable:
+            self.generate()
+        else:
+            self.cost = self.count_bad_tiles()
 
     def move(self, direction):
-        if not self.blank_pos:
-            self.find_blank_pos()
-
         i, j = self.blank_pos
 
         # move it in the given direction
@@ -99,14 +99,11 @@ class Puzzle:
         return count
 
     # find number of inversions in 15 puzzle
-    def inv_count(self):
-        if self.inversions is not None:
-            return self.inversions
-
+    def count_inversions(self):
         sequence = []
-        for i in range(4):
-            for j in range(4):
-                sequence.append(self.board[i][j])
+
+        for row in self.board:
+            sequence.extend(row)
 
         inversions = 0
 
@@ -115,7 +112,6 @@ class Puzzle:
                 if sequence[i] and sequence[j] and sequence[i] > sequence[j]:
                     inversions += 1
 
-        self.inversions = inversions
         return inversions
 
     # find position of blank tile
@@ -123,6 +119,5 @@ class Puzzle:
         for i in range(4):
             for j in range(4):
                 if self.board[i][j] == 0:
-                    self.blank_pos = (i, j)
-                    return
+                    return i, j
 

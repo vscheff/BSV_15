@@ -14,14 +14,7 @@ def get_input_puzzle():
         usr_inp = input("1. Generate a random puzzle\n2. Import a test puzzle\n$ ").strip()
 
         if usr_inp == '1':
-            puzzle = Puzzle()
-            puzzle.generate()
-
-            while not puzzle.is_solvable():
-                print(f"{puzzle}\nis not solvable. Trying again...")
-                puzzle.generate()
-
-            return puzzle
+            return Puzzle()
 
         if usr_inp == '2':
             with open_board_file() as in_file:
