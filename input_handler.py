@@ -11,7 +11,7 @@ else:
 
 def get_input_puzzle():
     while True:
-        usr_inp = input("1. Generate a random puzzle\n2. Import a test puzzle\n$ ").strip()
+        usr_inp = input("1. Generate a random puzzle\n2. Import a test puzzle\n3. do the Assignemnt 5 here\n$ ").strip()
 
         if usr_inp == '1':
             return Puzzle()
