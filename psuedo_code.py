@@ -20,8 +20,7 @@ class Puzzle:
     def find_blank(self):
         return position of blank space
 
-
-def solve_puzzle(puzzle)
+def solve_puzzle(puzzle):
     live_nodes = MinHeap()
     live_nodes.insert(puzzle)
     checked_boards = {puzzle.board: True}

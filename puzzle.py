@@ -56,7 +56,7 @@ class Puzzle:
         else:
             self.cost = self.count_bad_tiles()
 
-    def move(self, direction):
+    def move(self, direction: int):
         i, j = self.blank_pos
 
         # move it in the given direction
