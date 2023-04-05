@@ -43,6 +43,7 @@ class Puzzle:
     def generate(self):
         sequence = list(range(16))
         shuffle(sequence)
+
         for i in range(4):
             for j in range(4):
                 self.board[i][j] = sequence.pop()
@@ -108,7 +109,7 @@ class Puzzle:
         inversions = 0
 
         for i in range(16):
-            for j in range(i, 16):
+            for j in range(i + 1, 16):
                 if sequence[i] and sequence[j] and sequence[i] > sequence[j]:
                     inversions += 1
 

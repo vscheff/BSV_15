@@ -48,7 +48,7 @@ class MinHeap:
             self.heapify(smallest)
 
     # Inserts a node into the min heap
-    # param new_node - pointer to the node which needs to be inserted
+    # param new_node - the node to be inserted
     def insert(self, new_node):
         i = len(self.nodes)
         j = get_parent(i)

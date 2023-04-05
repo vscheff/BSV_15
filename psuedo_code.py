@@ -1,5 +1,3 @@
-from minheap import MinHeap
-
 class Puzzle:
     def is_solution(self):
         return True if solved else False
@@ -8,10 +6,13 @@ class Puzzle:
         return True if possible to solve else False
 
     def generate(self):
-        generate random puzzle
+        generate random solvable puzzle
 
     def move(self, direction):
         move blank spot in direction
+
+    def count_bad_tiles(self):
+        return number of nonblank tiles that are out of place
 
     def inv_count(self):
         return number of inversions
@@ -19,32 +20,29 @@ class Puzzle:
     def find_blank(self):
         return position of blank space
 
-class Node:
-    def cost(self):
-        return depth_in_tree + number_of_inversions
 
-puzzle = Puzzle()
-while not puzzle.is_solvable():
-    puzzle.generate()
+def solve_puzzle(puzzle)
+    live_nodes = MinHeap()
+    live_nodes.insert(puzzle)
+    checked_boards = {puzzle.board: True}
 
-liveNodes = MinHeap()
-start_node = Node(puzzle.board)
-liveNodes.insert(Node(puzzle.board))
-current = puzzle.board
+    while not liveNodes.is_empty():
+        current_node = live_nodes.pop_root()
 
-while not (current.is_solution() or liveNodes.empty()):
-    current = liveNodes.pop_root()
+        # Try to swap empty space in each direction
+        # Add the new board to liveNodes if it's a valid move that hasn't yet been checked
+        if up is valid_move and up not checked:
+            liveNodes.insert(up)
+            checked_boards[up] = True
 
-    # Try to swap empty space in each direction
-    # Add the new board to liveNodes if it's a valid move that hasn't yet been checked
-    if up is valid_move and up not checked:
-        liveNodes.insert(board.up())
+        if down is valid_move and down not checked:
+            liveNodes.insert(down)
+            checked_boards[down] = True
 
-    if down is valid_move and down not checked:
-        liveNodes.insert(board.down())
+        if left is valid_move and left not checked:
+            liveNodes.insert(left)
+            checked_boards[left] = True
 
-    if left is valid_move and left not checked:
-        liveNodes.insert(board.left())
-
-    if right is valid_move and right not checked:
-        liveNodes.insert(board.right())
+        if right is valid_move and right not checked:
+            liveNodes.insert(right)
+            checked_boards[right] = True
