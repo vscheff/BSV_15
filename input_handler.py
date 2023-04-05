@@ -11,10 +11,18 @@ else:
 
 def get_input_puzzle():
     while True:
-        usr_inp = input("1. Generate a random puzzle\n2. Import a test puzzle\n3. do the Assignemnt 5 here\n$ ").strip()
+        usr_inp = input(
+                "1. Generate a random puzzle\n2. Import a test puzzle\n3. do the Assignemnt 5 here\n$ "
+                ).strip()
 
         if usr_inp == '1':
-            return Puzzle()
+            while True:
+                try:
+                    size = int(input("\nEnter desired grid width: "))
+                except ValueError:
+                    print("\nERROR: Please enter a valid integer.")
+                else:
+                    return Puzzle(size=size)
 
         if usr_inp == '2':
             with open_board_file() as in_file:
@@ -26,7 +34,7 @@ def get_input_puzzle():
 
             return Puzzle(board=input_board)
 
-        print("\nPlease input a valid option!\n")
+        print("\nERROR: Please input a valid option.\n")
 
 def open_board_file():
     while True:

@@ -1,4 +1,4 @@
-from time import perf_counter
+from time import perf_counter_ns
 from timing_plotting import Plotting
 
 # Local dependencies
@@ -15,7 +15,7 @@ def main():
         print(f"\nOutput Puzzle:\n{solution}")
 
 def solve_puzzle(puzzle: Puzzle):
-    start_solve_puzzle = perf_counter()
+    start_solve_puzzle = perf_counter_ns()
 
     live_nodes = MinHeap()
     live_nodes.insert(puzzle)
@@ -32,15 +32,15 @@ def solve_puzzle(puzzle: Puzzle):
         for direction in UP, DOWN, LEFT, RIGHT:
             new_board = current_node.move(direction)
             if new_board and str(new_board) not in checked_boards:
-                live_nodes.insert(Puzzle(new_board))
+                live_nodes.insert(Puzzle(new_board, puzzle.board_size))
                 checked_boards[str(new_board)] = True
     else:
-        print("No solution found! Are you sure the puzzle was solvable?")
+        print("\nNo solution found! Are you sure the puzzle was solvable?")
         return None
 
-    end_solve_puzzle = perf_counter()
+    end_solve_puzzle = perf_counter_ns()
     elapsed_time = end_solve_puzzle - start_solve_puzzle
-    print("\nTime to solve the puzzle:", elapsed_time, "seconds")
+    print("\nTime to solve the puzzle:", elapsed_time, "ns")
 
     return current_node
     # TODO:
