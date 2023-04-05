@@ -49,3 +49,4 @@ def solve_puzzle(puzzle: Puzzle):
 
 if __name__ == "__main__":
     main()
+
