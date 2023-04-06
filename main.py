@@ -7,16 +7,22 @@ from minheap import MinHeap
 from input_handler import get_input_puzzle
 
 def main():
-    puzzle = get_input_puzzle()
+    puzzle, num_tests = get_input_puzzle()
 
-    print(f"\nInput Puzzle (Solvable={puzzle.is_solvable()}):\n{puzzle}")
+    total_time = 0
 
-    if solution := solve_puzzle(puzzle):
-        print(f"\nOutput Puzzle:\n{solution}")
+    for _ in range(num_tests):
+        start_solve_puzzle = perf_counter_ns()
+        solution = solve_puzzle(puzzle)
+        total_time += perf_counter_ns() - start_solve_puzzle
+       
+        print_solution(solution)
+
+        puzzle.generate()
+
+    print(f"Average time to solve the puzzle: {total_time // num_tests / 1000000000:.4f} seconds")
 
 def solve_puzzle(puzzle: Puzzle):
-    start_solve_puzzle = perf_counter_ns()
-
     live_nodes = MinHeap()
     live_nodes.insert(puzzle)
     checked_boards = {str(puzzle.board): True}
@@ -25,26 +31,27 @@ def solve_puzzle(puzzle: Puzzle):
         current_node = live_nodes.pop_root()
 
         if current_node.is_solution():
-            break
-
-        print(f"\nCurrent Node (Cost={current_node.cost}):\n{current_node}")
+            return current_node
 
         for direction in UP, DOWN, LEFT, RIGHT:
             new_board = current_node.move(direction)
             if new_board and str(new_board) not in checked_boards:
-                live_nodes.insert(Puzzle(new_board, puzzle.board_size))
+                live_nodes.insert(Puzzle(new_board, puzzle.board_size, current_node))
                 checked_boards[str(new_board)] = True
-    else:
-        print("\nNo solution found! Are you sure the puzzle was solvable?")
-        return None
+    
+    print("\nNo solution found! Are you sure the puzzle was solvable?")
+    return None
 
-    end_solve_puzzle = perf_counter_ns()
-    elapsed_time = end_solve_puzzle - start_solve_puzzle
-    print("\nTime to solve the puzzle:", elapsed_time, "ns")
+def print_solution(node: Puzzle):
+    path = [node]
 
-    return current_node
-    # TODO:
-        # Put into DATAFRAME if we want to time more than one run
+    while node.parent:
+        node = node.parent
+        path.append(node)
+
+    print("\nSolution Path:")
+    for i in range(len(path) - 1, -1, -1):
+        print(path[i], '\n')
 
 
 if __name__ == "__main__":

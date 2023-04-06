@@ -11,9 +11,7 @@ else:
 
 def get_input_puzzle():
     while True:
-        usr_inp = input(
-                "1. Generate a random puzzle\n2. Import a test puzzle\n3. do the Assignemnt 5 here\n$ "
-                ).strip()
+        usr_inp = input("1. Generate a random puzzle\n2. Import a test puzzle\n$ ").strip()
 
         if usr_inp == '1':
             while True:
@@ -22,7 +20,15 @@ def get_input_puzzle():
                 except ValueError:
                     print("\nERROR: Please enter a valid integer.")
                 else:
-                    return Puzzle(size=size)
+                    break
+
+            while True:
+                try:
+                    num_tests = int(input("\nEnter desired number of tests: "))
+                except ValueError:
+                    print("\nERROR: Please enter a valid integer.")
+                else: 
+                    return Puzzle(size=size), num_tests
 
         if usr_inp == '2':
             with open_board_file() as in_file:
@@ -32,7 +38,7 @@ def get_input_puzzle():
                     print("\nERROR: Selected input file is not formatted correctly.\n")
                     continue
 
-            return Puzzle(board=input_board)
+            return Puzzle(board=input_board), 1
 
         print("\nERROR: Please input a valid option.\n")
 

@@ -7,8 +7,9 @@ LEFT = 2
 RIGHT = 3
 
 class Puzzle:
-    def __init__(self, board=None, size=4):
+    def __init__(self, board=None, size=4, parent=None):
         self.board_size = size
+        self.parent = parent
 
         if board is None:
             self.board = [[-1 for _ in range(size)] for _ in range(size)]
