@@ -12,7 +12,7 @@ def main():
     puzzle, size, num_tests, usr, usr_inp = get_input_puzzle()
     plots = Plotting(usr)
 
-    debug = True
+    debug = False
     total_time = 0
 
     #TODO:
