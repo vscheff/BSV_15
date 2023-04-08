@@ -32,10 +32,10 @@ def main():
 
         plots.calculate_mean_time()
         plots.dataframe_to_csv()
-        plots.plot_data(debug)
 
         if debug:
             plots.print_dataframe()
+            plots.plot_data(debug)
 
     else:
         for n in range(num_tests):
