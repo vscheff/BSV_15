@@ -4,22 +4,21 @@ from puzzle import UP, DOWN, LEFT, RIGHT, Puzzle
 from minheap import MinHeap
 
 # create constants
-TILESIZE = 80
+TILESIZE = 100
 FPS = 30
 BLANK = None
 
 #                 R    G    B
 BLACK =         (  0,   0,   0)
 WHITE =         (255, 255, 255)
-BRIGHTBLUE =    (  0,  50, 255)
-DARKTURQUOISE = (  3,  54,  73)
-GREEN =         (  0, 204,   0)
+BROWN =         ( 60,  40,   0)
+GOLD  =         (200, 170,  25)
 
 # set colors
-BGCOLOR = DARKTURQUOISE
-TILECOLOR = GREEN
+BGCOLOR = BROWN
+TILECOLOR = GOLD
 TEXTCOLOR = WHITE
-BORDERCOLOR = BRIGHTBLUE
+BORDERCOLOR = BLACK
 BASICFONTSIZE = 20
 
 BUTTONCOLOR = WHITE
@@ -35,8 +34,8 @@ def gui(puzzle):
     # set board and window size based on user given size (size x size puzzle)
     BOARDWIDTH = puzzle.board_size
     BOARDHEIGHT = puzzle.board_size
-    WINDOWWIDTH = 160 * puzzle.board_size
-    WINDOWHEIGHT = 120 * puzzle.board_size
+    WINDOWWIDTH = 200 * puzzle.board_size
+    WINDOWHEIGHT = 160 * puzzle.board_size
 
     XMARGIN = int((WINDOWWIDTH - (TILESIZE * BOARDWIDTH + (BOARDWIDTH -1))) / 2)
     YMARGIN = int((WINDOWHEIGHT - (TILESIZE * BOARDHEIGHT + (BOARDHEIGHT - 1))) / 2)
@@ -48,19 +47,19 @@ def gui(puzzle):
     BASICFONT = pygame.font.Font("freesansbold.ttf", BASICFONTSIZE)
 
     # create option button for solving
-    SOLVE_SURF, SOLVE_RECT = make_text('Solve', TEXTCOLOR, TILECOLOR, WINDOWWIDTH - 120, WINDOWHEIGHT - 30)
+    SOLVE_SURF, SOLVE_RECT = make_text("Solve", TEXTCOLOR, TILECOLOR, WINDOWWIDTH - 120, WINDOWHEIGHT - 60)
 
     get_starting_board(puzzle.board)
     starting_board = puzzle.board
-    solution_board = [[1,2,3,4],[5,6,7,8],[9,10,11,12],[13,14,15,0]]
+    solution_board = Puzzle(board=[[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12], [13, 14, 15, 0]])
 
     # main loop where user can move tiles
     while True:
         slide_to = 4  # direction a tile should slide if there is one
         msg = "Click tiles next to empty space or press arrow keys to slide tiles."
 
-        if puzzle.board == solution_board:
-            msg = "Solved!"
+        if puzzle.board == solution_board.board:
+            msg = "Solved! (Press Esc to close)"
 
         draw_board(puzzle.board, msg)
 
@@ -72,9 +71,13 @@ def gui(puzzle):
                 spot_x, spot_y = get_spot_clicked(puzzle.board, event.pos[0], event.pos[1])
 
                 if (spot_x, spot_y) == (None, None):  # check if user clicked an option button
-                    if SOLVE_RECT.collidepoint(event.pos):
+                    if SOLVE_RECT.collidepoint(event.pos) and puzzle.board != solution_board.board:
+                        print(puzzle)
+                        print()
                         solved_puzzle = solve_puzzle(puzzle)
-                        puzzle = Puzzle(solve_animation(solved_puzzle).board, BOARDHEIGHT, None)
+                        print(solved_puzzle)
+                        solve_animation(solved_puzzle)
+                        puzzle = Puzzle(solved_puzzle.board, BOARDHEIGHT, None)
 
                 else:  # use clicked on a tile
                     # check if the clicked tile was next to blank spot
@@ -213,6 +216,7 @@ def draw_board(board, message):
             if board[y][x] and board[y][x] != 0:
                 draw_tile(x, y, board[y][x])
 
+
     left = XMARGIN - 1
     top = YMARGIN - 1
     width = BOARDWIDTH * TILESIZE
@@ -255,6 +259,7 @@ def make_text(text, color, bgcolor, top, left):
     text_surf = BASICFONT.render(text, True, color, bgcolor)
     text_rect = text_surf.get_rect()
     text_rect.topleft = (top, left)
+
     return text_surf, text_rect
 
 
@@ -262,9 +267,10 @@ def solve_animation(node: Puzzle):
     path = [node]
     solution_node = None
 
-    while node.parent:
-        node = node.parent
-        path.append(node)
+    if node.parent:
+        while node.parent:
+            node = node.parent
+            path.append(node)
 
     for i in range(len(path) - 1, -1, -1):
         if path[i].is_solution:
@@ -272,8 +278,6 @@ def solve_animation(node: Puzzle):
         draw_board(path[i].board, "Solving (this might take a while)")
         pygame.display.update()
         FPSCLOCK.tick(FPS)
-
-    return solution_node
 
 
 def solve_puzzle(puzzle: Puzzle):
