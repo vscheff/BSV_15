@@ -41,18 +41,17 @@ def gui(puzzle):
            DISPLAYSURF, BASICFONT, SOLVE_SURF, SOLVE_RECT
 
     # set board and window size based on user given size (size x size puzzle)
-    BOARDWIDTH = puzzle.board_size
-    BOARDHEIGHT = puzzle.board_size
-    WINDOWWIDTH = max(160 * puzzle.board_size, MIN_WINDOW_WIDTH)
-    WINDOWHEIGHT = max(120 * puzzle.board_size, MIN_WINDOW_HEIGHT)
+    BOARDWIDTH = BOARDHEIGHT = puzzle.board_size
+    WINDOWWIDTH = max(160 * BOARDWIDTH, MIN_WINDOW_WIDTH)
+    WINDOWHEIGHT = max(120 * BOARDHEIGHT, MIN_WINDOW_HEIGHT)
 
-    XMARGIN = int((WINDOWWIDTH - (TILESIZE * BOARDWIDTH + (BOARDWIDTH -1))) / 2)
-    YMARGIN = int((WINDOWHEIGHT - (TILESIZE * BOARDHEIGHT + (BOARDHEIGHT - 1))) / 2)
+    XMARGIN = (WINDOWWIDTH - (TILESIZE * BOARDWIDTH + (BOARDWIDTH -1))) // 2
+    YMARGIN = (WINDOWHEIGHT - (TILESIZE * BOARDHEIGHT + (BOARDHEIGHT - 1))) // 2
 
     pygame.init()
     FPSCLOCK = pygame.time.Clock()
     DISPLAYSURF = pygame.display.set_mode((WINDOWWIDTH, WINDOWHEIGHT))
-    pygame.display.set_caption("n^2-1 Puzzle")
+    pygame.display.set_caption(f"{BOARDWIDTH ** 2 - 1} Puzzle")
     BASICFONT = pygame.font.Font("freesansbold.ttf", BASICFONTSIZE)
 
     # create option button for solving
@@ -60,7 +59,16 @@ def gui(puzzle):
 
     get_starting_board(puzzle.board)
     starting_board = puzzle.board
-    solution_board = [[1,2,3,4],[5,6,7,8],[9,10,11,12],[13,14,15,0]]
+   
+    # Generate Solution Board
+    k = 1
+    solution_board = []
+    for i in range(BOARDHEIGHT):
+        solution_board.append([])
+        for j in range(BOARDWIDTH):
+            solution_board[i].append(k)
+            k += 1
+    solution_board[-1][-1] = 0
 
     # main loop where user can move tiles
     while True:
