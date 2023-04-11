@@ -62,7 +62,7 @@ class Puzzle:
             self.cost = self.count_bad_tiles()
 
     def move(self, direction: int):
-        i, j = self.blank_pos
+        i, j = self.find_blank_pos()
 
         # move it in the given direction
         # if the move is not possible, don't do anything

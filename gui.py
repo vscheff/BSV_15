@@ -19,15 +19,14 @@ MIN_WINDOW_HEIGHT = 480
 #                 R    G    B
 BLACK =         (  0,   0,   0)
 WHITE =         (255, 255, 255)
-BRIGHTBLUE =    (  0,  50, 255)
-DARKTURQUOISE = (  3,  54,  73)
-GREEN =         (  0, 204,   0)
+GOLD =          (200, 180,   0)
+BROWN =         (100,  50,   0)
 
 # set colors
-BGCOLOR = DARKTURQUOISE
-TILECOLOR = GREEN
+BGCOLOR = BROWN
+TILECOLOR = GOLD
 TEXTCOLOR = WHITE
-BORDERCOLOR = BRIGHTBLUE
+BORDERCOLOR = BLACK
 BASICFONTSIZE = 20
 
 BUTTONCOLOR = WHITE
@@ -76,7 +75,7 @@ def gui(puzzle):
         msg = "Click tiles next to empty space or press arrow keys to slide tiles."
 
         if puzzle.board == solution_board:
-            msg = "Solved!"
+            msg = "Solved! (Esc to close)"
 
         draw_board(puzzle.board, msg)
 
@@ -89,6 +88,9 @@ def gui(puzzle):
 
                 if (spot_x, spot_y) == (None, None):  # check if user clicked an option button
                     if SOLVE_RECT.collidepoint(event.pos):
+                        draw_board(puzzle.board, "Solving (this might take a while)")
+                        pygame.display.update()
+                        FPSCLOCK.tick(FPS)
                         solved_puzzle = solve_puzzle(puzzle)
                         puzzle = Puzzle(solve_animation(solved_puzzle).board, BOARDHEIGHT, None)
 
@@ -288,6 +290,7 @@ def solve_animation(node: Puzzle):
         draw_board(path[i].board, "Solving (this might take a while)")
         pygame.display.update()
         FPSCLOCK.tick(FPS)
+        quit_check()
 
     return solution_node
 
