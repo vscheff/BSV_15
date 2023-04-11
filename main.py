@@ -6,11 +6,15 @@ from tqdm import tqdm
 from puzzle import UP, DOWN, LEFT, RIGHT, Puzzle
 from minheap import MinHeap
 from input_handler import get_input_puzzle
+from gui import gui
+from gui import solve_puzzle
 
 
 def main():
     puzzle, size, num_tests, usr, usr_inp = get_input_puzzle()
     plots = Plotting(usr)
+
+    gui(puzzle)
 
     debug = False
     total_time = 0
@@ -48,27 +52,6 @@ def main():
             puzzle.generate()
 
         print(f"Average time to solve the puzzle: {total_time // num_tests / 1000000000:.4f} seconds")
-
-
-def solve_puzzle(puzzle: Puzzle):
-    live_nodes = MinHeap()
-    live_nodes.insert(puzzle)
-    checked_boards = {str(puzzle.board): True}
-
-    while live_nodes:
-        current_node = live_nodes.pop_root()
-
-        if current_node.is_solution():
-            return current_node
-
-        for direction in UP, DOWN, LEFT, RIGHT:
-            new_board = current_node.move(direction)
-            if new_board and str(new_board) not in checked_boards:
-                live_nodes.insert(Puzzle(new_board, puzzle.board_size, current_node))
-                checked_boards[str(new_board)] = True
-
-    print("\nNo solution found! Are you sure the puzzle was solvable?")
-    return None
 
 
 def print_solution(node: Puzzle):
