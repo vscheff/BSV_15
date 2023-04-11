@@ -6,8 +6,7 @@ from tqdm import tqdm
 from puzzle import UP, DOWN, LEFT, RIGHT, Puzzle
 from minheap import MinHeap
 from input_handler import get_input_puzzle
-from gui import gui
-from gui import solve_puzzle
+from gui import gui, solve_puzzle
 
 
 def main():
