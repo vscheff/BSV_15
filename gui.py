@@ -8,10 +8,13 @@ from pygame.locals import *
 from puzzle import UP, DOWN, LEFT, RIGHT, Puzzle
 from minheap import MinHeap
 
+
 # create constants
 TILESIZE = 80
 FPS = 30
 BLANK = None
+MIN_WINDOW_WIDTH = 640
+MIN_WINDOW_HEIGHT = 480
 
 #                 R    G    B
 BLACK =         (  0,   0,   0)
@@ -40,8 +43,8 @@ def gui(puzzle):
     # set board and window size based on user given size (size x size puzzle)
     BOARDWIDTH = puzzle.board_size
     BOARDHEIGHT = puzzle.board_size
-    WINDOWWIDTH = 160 * puzzle.board_size
-    WINDOWHEIGHT = 120 * puzzle.board_size
+    WINDOWWIDTH = max(160 * puzzle.board_size, MIN_WINDOW_WIDTH)
+    WINDOWHEIGHT = max(120 * puzzle.board_size, MIN_WINDOW_HEIGHT)
 
     XMARGIN = int((WINDOWWIDTH - (TILESIZE * BOARDWIDTH + (BOARDWIDTH -1))) / 2)
     YMARGIN = int((WINDOWHEIGHT - (TILESIZE * BOARDHEIGHT + (BOARDHEIGHT - 1))) / 2)
