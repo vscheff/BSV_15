@@ -5,7 +5,7 @@ import pygame, sys, random
 from pygame.locals import *
 
 # Local Dependencies
-from puzzle import UP, DOWN, LEFT, RIGHT, Puzzle
+from puzzle import *
 from minheap import MinHeap
 
 
@@ -15,6 +15,11 @@ FPS = 30
 BLANK = None
 MIN_WINDOW_WIDTH = 640
 MIN_WINDOW_HEIGHT = 480
+
+# In-Game Messages
+MSG_INSTRUCTIONS = "Click tiles next to empty space or press arrow keys to slide tiles."
+MSG_SOLVED = "Solved! (Esc to close)"
+MSG_SOLVING = "Solving (this might take a while)"
 
 #                 R    G    B
 BLACK =         (  0,   0,   0)
@@ -71,16 +76,17 @@ def gui(puzzle):
 
     # main loop where user can move tiles
     while True:
-        slide_to = 4  # direction a tile should slide if there is one
-        msg = "Click tiles next to empty space or press arrow keys to slide tiles."
+        slide_to = None  # direction a tile should slide if there is one
+        msg = MSG_INSTRUCTIONS
 
         if puzzle.board == solution_board:
-            msg = "Solved! (Esc to close)"
+            msg = MSG_SOLVED 
 
         draw_board(puzzle.board, msg)
 
         if quit_check():
             return
+
         for event in pygame.event.get():  # event handling loop
             # if user clicked in the window, get cords of spot clicked
             if event.type == MOUSEBUTTONUP:  # if user used mouse
@@ -88,7 +94,7 @@ def gui(puzzle):
 
                 if (spot_x, spot_y) == (None, None):  # check if user clicked an option button
                     if SOLVE_RECT.collidepoint(event.pos):
-                        draw_board(puzzle.board, "Solving (this might take a while)")
+                        draw_board(puzzle.board, MSG_SOLVING)
                         pygame.display.update()
                         FPSCLOCK.tick(FPS)
                         solved_puzzle = solve_puzzle(puzzle)
@@ -96,7 +102,7 @@ def gui(puzzle):
 
                 else:  # use clicked on a tile
                     # check if the clicked tile was next to blank spot
-                    blank_y, blank_x = puzzle.find_blank_pos()
+                    blank_y, blank_x = puzzle.blank_pos
                     if spot_x == blank_x + 1 and spot_y == blank_y:
                         slide_to = LEFT
                     elif spot_x == blank_x - 1 and spot_y == blank_y:
@@ -108,37 +114,23 @@ def gui(puzzle):
 
             elif event.type == KEYUP:  # user used keyboard
                 # check if user entered a key to move a tile
-                if event.key in (K_LEFT, K_a) and is_valid_move(puzzle, LEFT):
+                if event.key in (K_LEFT, K_a) and puzzle.is_valid_move(LEFT):
                     slide_to = LEFT
-                elif event.key in (K_RIGHT, K_d) and is_valid_move(puzzle, RIGHT):
+                elif event.key in (K_RIGHT, K_d) and puzzle.is_valid_move(RIGHT):
                     slide_to = RIGHT
-                elif event.key in (K_UP, K_w) and is_valid_move(puzzle, UP):
+                elif event.key in (K_UP, K_w) and puzzle.is_valid_move(UP):
                     slide_to = UP
-                elif event.key in (K_DOWN, K_s) and is_valid_move(puzzle, DOWN):
+                elif event.key in (K_DOWN, K_s) and puzzle.is_valid_move(DOWN):
                     slide_to = DOWN
 
         # if user wants to move a tile
-        if slide_to != 4:
+        if slide_to is not None:
             # show tile slide
-            slide_animation(puzzle, slide_to, "Click tiles next to empty space or press arrow keys to slide tiles.", 8)
-            make_move(puzzle, slide_to)
+            slide_animation(puzzle, slide_to, MSG_INSTRUCTIONS, 8)
+            puzzle = Puzzle(puzzle.move(slide_to), BOARDWIDTH)
+        
         pygame.display.update()
         FPSCLOCK.tick(FPS)
-
-
-# function moves blank spot in given direction
-def make_move(puzzle, move):
-    blank_y, blank_x = puzzle.find_blank_pos()
-
-    if move == UP:
-        puzzle.board[blank_y][blank_x], puzzle.board[blank_y + 1][blank_x] = puzzle.board[blank_y + 1][blank_x], puzzle.board[blank_y][blank_x]
-    elif move == DOWN:
-        puzzle.board[blank_y][blank_x], puzzle.board[blank_y - 1][blank_x] = puzzle.board[blank_y - 1][blank_x], puzzle.board[blank_y][blank_x]
-    elif move == LEFT:
-        puzzle.board[blank_y][blank_x], puzzle.board[blank_y][blank_x + 1] = puzzle.board[blank_y][blank_x + 1], puzzle.board[blank_y][blank_x]
-    elif move == RIGHT:
-        puzzle.board[blank_y][blank_x], puzzle.board[blank_y][blank_x - 1] = puzzle.board[blank_y][blank_x - 1], puzzle.board[blank_y][blank_x]
-
 
 
 # function terminates gui
@@ -161,15 +153,6 @@ def quit_check():
     return False
 
 
-# function checks if user entered move is a valid move
-def is_valid_move(puzzle, move):
-    blank_y, blank_x = puzzle.find_blank_pos()
-    return (move == UP and blank_y != len(puzzle.board) - 1) or \
-           (move == DOWN and blank_y != 0) or \
-           (move == LEFT and blank_x != len(puzzle.board[0]) - 1) or \
-           (move == RIGHT and blank_x != 0)
-
-
 # function creates starting board
 def get_starting_board(board):
     draw_board(board, "")
@@ -178,7 +161,7 @@ def get_starting_board(board):
 
 # function displays tile slide animation, does not check if move is valid
 def slide_animation(puzzle, move, msg, speed):
-    blank_y, blank_x = puzzle.find_blank_pos()
+    blank_y, blank_x = puzzle.blank_pos
 
     if move == UP:
         move_x = blank_x
@@ -287,30 +270,10 @@ def solve_animation(node: Puzzle):
     for i in range(len(path) - 1, -1, -1):
         if path[i].is_solution:
             solution_node = path[i]
-        draw_board(path[i].board, "Solving (this might take a while)")
+        draw_board(path[i].board, MSG_SOLVING)
         pygame.display.update()
         FPSCLOCK.tick(FPS)
         quit_check()
 
     return solution_node
 
-
-def solve_puzzle(puzzle: Puzzle):
-    live_nodes = MinHeap()
-    live_nodes.insert(puzzle)
-    checked_boards = {str(puzzle.board): True}
-
-    while live_nodes:
-        current_node = live_nodes.pop_root()
-
-        if current_node.is_solution():
-            return current_node
-
-        for direction in UP, DOWN, LEFT, RIGHT:
-            new_board = current_node.move(direction)
-            if new_board and str(new_board) not in checked_boards:
-                live_nodes.insert(Puzzle(new_board, puzzle.board_size, current_node))
-                checked_boards[str(new_board)] = True
-
-    print("\nNo solution found! Are you sure the puzzle was solvable?")
-    return None

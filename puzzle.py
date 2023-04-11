@@ -1,10 +1,14 @@
 from random import shuffle
 from copy import deepcopy
 
+# Local dependencies
+from minheap import MinHeap
+
 UP = 0
 DOWN = 1
 LEFT = 2
 RIGHT = 3
+
 
 class Puzzle:
     def __init__(self, board=None, size=4, parent=None):
@@ -45,6 +49,14 @@ class Puzzle:
         
         return False
 
+    def is_valid_move(self, move: int):
+        i, j = self.blank_pos
+        
+        return (move == UP and i < self.board_size) or \
+               (move == DOWN and i > 0) or \
+               (move == LEFT and j < self.board_size) or \
+               (move == RIGHT and j > 0) 
+
     def generate(self):
         sequence = list(range(self.board_size ** 2))
         shuffle(sequence)
@@ -62,30 +74,30 @@ class Puzzle:
             self.cost = self.count_bad_tiles()
 
     def move(self, direction: int):
-        i, j = self.find_blank_pos()
+        i, j = self.blank_pos
 
         # move it in the given direction
         # if the move is not possible, don't do anything
         # if the move is possible, swap the values
-        if direction == UP:
+        if direction == DOWN:
             if i > 0:
                 new_board = deepcopy(self.board)
                 new_board[i][j] = new_board[i - 1][j]
                 new_board[i - 1][j] = 0
                 return new_board
-        elif direction == DOWN:
+        elif direction == UP:
             if i < self.board_size - 1:
                 new_board = deepcopy(self.board)
                 new_board[i][j] = new_board[i + 1][j]
                 new_board[i + 1][j] = 0
                 return new_board
-        elif direction == LEFT:
+        elif direction == RIGHT:
             if j > 0:
                 new_board = deepcopy(self.board)
                 new_board[i][j] = new_board[i][j - 1]
                 new_board[i][j - 1] = 0
                 return new_board
-        elif direction == RIGHT:
+        elif direction == LEFT:
             if j < self.board_size - 1:
                 new_board = deepcopy(self.board)
                 new_board[i][j] = new_board[i][j + 1]
@@ -128,4 +140,25 @@ class Puzzle:
             for j in range(self.board_size):
                 if self.board[i][j] == 0:
                     return i, j
+
+
+def solve_puzzle(puzzle: Puzzle):
+    live_nodes = MinHeap()
+    live_nodes.insert(puzzle)
+    checked_boards = {str(puzzle.board): True}
+
+    while live_nodes:
+        current_node = live_nodes.pop_root()
+
+        if current_node.is_solution():
+            return current_node
+
+        for direction in UP, DOWN, LEFT, RIGHT:
+            new_board = current_node.move(direction)
+            if new_board and str(new_board) not in checked_boards:
+                live_nodes.insert(Puzzle(new_board, puzzle.board_size, current_node))
+                checked_boards[str(new_board)] = True
+
+    print("\nNo solution found! Are you sure the puzzle was solvable?")
+    return None
 

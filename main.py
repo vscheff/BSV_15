@@ -3,10 +3,10 @@ from timing_plotting import Plotting
 from tqdm import tqdm
 
 # Local dependencies
-from puzzle import UP, DOWN, LEFT, RIGHT, Puzzle
+from puzzle import *
 from minheap import MinHeap
 from input_handler import get_input_puzzle
-from gui import gui, solve_puzzle
+from gui import gui
 
 
 def main():
