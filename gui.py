@@ -1,5 +1,10 @@
+from os import environ
+environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "True"
+
 import pygame, sys, random
 from pygame.locals import *
+
+# Local Dependencies
 from puzzle import UP, DOWN, LEFT, RIGHT, Puzzle
 from minheap import MinHeap
 
