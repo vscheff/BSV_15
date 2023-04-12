@@ -1,3 +1,4 @@
+from __future__ import annotations
 from random import shuffle
 from copy import deepcopy
 
@@ -11,24 +12,31 @@ RIGHT = 3
 
 
 class Puzzle:
-    def __init__(self, board=None, size=4, parent=None):
-        self.board_size = size
+    def __init__(self, board: list = None, size: int = 4, parent: Puzzle = None):
         self.parent = parent
+        self.cost = -1
+        self.blank_pos = (-1, -1)
+        self.inversions = -1
 
         if board is None:
+            self.board_size = size
             self.board = [[-1 for _ in range(size)] for _ in range(size)]
             self.generate()
         else:
-            self.board = board
-            self.cost = self.count_bad_tiles()
-            self.blank_pos = self.find_blank_pos()
-            self.inversions = self.count_inversions()
+            self.set_board(board)
 
     def __str__(self):
         return "\n".join(["".join([f"{str(i):<3}" for i in row]) for row in self.board])
 
-    def __lt__(self, other):
+    def __lt__(self, other: Puzzle):
         return self.cost < other.cost if self.cost != other.cost else self.inversions < other.inversions
+
+    def set_board(self, board: list):
+        self.board = board
+        self.board_size = len(self.board)
+        self.cost = self.count_bad_tiles()
+        self.blank_pos = self.find_blank_pos()
+        self.inversions = self.count_inversions()
 
     # Checks if the current board is the solution board
     def is_solution(self):
@@ -161,4 +169,3 @@ def solve_puzzle(puzzle: Puzzle):
 
     print("\nNo solution found! Are you sure the puzzle was solvable?")
     return None
-

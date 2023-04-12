@@ -3,66 +3,57 @@ from timing_plotting import Plotting
 from tqdm import tqdm
 
 # Local dependencies
-from puzzle import *
-from minheap import MinHeap
-from input_handler import get_input_puzzle
 from gui import gui
+from input_handler import get_board_from_file, get_int_from_user
+from puzzle import Puzzle, solve_puzzle
 
+
+DEBUG = False
 
 def main():
-    puzzle, size, num_tests, usr, usr_inp = get_input_puzzle()
-    plots = Plotting(usr)
+    prompt_choice = get_int_from_user("1. Launch GUI\n2. Plotting\n3. Import a test puzzle\n$ ", 1, 3)
 
-    gui(puzzle)
+    if prompt_choice == 1:
+        gui(Puzzle(size=get_int_from_user("\nEnter desired grid width: ", 1)))
 
-    debug = False
-    total_time = 0
+    elif prompt_choice == 2:
+        usr = ""
+        while not usr:
+            usr = input("\nEnter your username: ")
 
-    #TODO:
-    # 1. Puzzle size should implement by n everytime we call solve_puzzle function in the usr_inp == '3' condition
+        min_val = get_int_from_user("\nEnter minimum grid width: ", 1)
+        max_val = get_int_from_user("\nEnter maximum grid width: ", min_val)
+        num_tests = get_int_from_user("\nEnter desired number of tests: ", 1)
+        plots = Plotting(usr)
 
-    if usr_inp == '3':
-        for n in tqdm(range(0, size), desc="Solving Puzzles", unit="puzzle", colour="CYAN",
-                      bar_format="{l_bar}{bar:20}{r_bar}{bar:-20b}", position=0):
-            for _ in tqdm(range(num_tests), desc="Running Tests", unit="test", colour="CYAN",
-                          bar_format="{l_bar}{bar:20}{r_bar}{bar:-20b}", position=1, leave=False):
-                start_solve_puzzle = perf_counter_ns()
+        for n in tqdm(range(min_val, max_val + 1), desc="Computing", unit="puzzle", colour="CYAN", mininterval=0):
+            puzzle = Puzzle(size=n)
+            for _ in tqdm(range(num_tests), desc=f"{n**2-1:>2} Puzzle", unit="test", colour="CYAN", mininterval=0):
+                start_time = perf_counter_ns()
                 solve_puzzle(puzzle)
-                end_solve_puzzle = perf_counter_ns()
-
-                plots.add_numbers_to_dataframe(n, end_solve_puzzle - start_solve_puzzle)
-                total_time += perf_counter_ns() - start_solve_puzzle
+                plots.add_numbers_to_dataframe(n, perf_counter_ns() - start_time)
 
         plots.calculate_mean_time()
         plots.dataframe_to_csv()
+        plots.plot_data(DEBUG)
 
-        if debug:
+        if DEBUG:
             plots.print_dataframe()
-            plots.plot_data(debug)
 
-    else:
-        for n in range(num_tests):
-            start_solve_puzzle = perf_counter_ns()
-            solution = solve_puzzle(puzzle)
+    elif prompt_choice == 3:
+        input_board = get_board_from_file()
+        puzzle = Puzzle(board=input_board)
+        num_tests = get_int_from_user("\nEnter desired number of tests: ", 1)
+        total_time = 0
 
-            total_time += perf_counter_ns() - start_solve_puzzle
+        for _ in range(num_tests):
+            start_time = perf_counter_ns()
+            solve_puzzle(puzzle)
+            total_time += perf_counter_ns() - start_time
 
-            print_solution(solution)
-            puzzle.generate()
+            puzzle.set_board(input_board)
 
         print(f"Average time to solve the puzzle: {total_time // num_tests / 1000000000:.4f} seconds")
-
-
-def print_solution(node: Puzzle):
-    path = [node]
-
-    while node.parent:
-        node = node.parent
-        path.append(node)
-
-    print("\nSolution Path:")
-    for i in range(len(path) - 1, -1, -1):
-        print(path[i], '\n')
 
 
 if __name__ == "__main__":

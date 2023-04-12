@@ -71,7 +71,7 @@ class Plotting:
         plt.legend()
 
         # save the plot
-        figure.savefig(PLOTS + self.user + '.png', dpi=1000)
+        figure.savefig(PLOTS + self.user + '.png', dpi=300)
 
         if debug:
             # show the plot

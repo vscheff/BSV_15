@@ -127,7 +127,7 @@ def gui(puzzle):
         if slide_to is not None:
             # show tile slide
             slide_animation(puzzle, slide_to, MSG_INSTRUCTIONS, 8)
-            puzzle = Puzzle(puzzle.move(slide_to), BOARDWIDTH)
+            puzzle.set_board(puzzle.move(slide_to))
         
         pygame.display.update()
         FPSCLOCK.tick(FPS)
@@ -140,7 +140,8 @@ def terminate():
 
 # function checks if user selected the quit button
 def quit_check():
-    for event in pygame.event.get(QUIT):  # get all QUIT events
+    # get all QUIT events
+    if pygame.event.get(QUIT):
         terminate()
         return True
 
