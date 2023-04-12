@@ -7,6 +7,7 @@ environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "True"
 
 import pygame
 from pygame.locals import *
+from thread import ThreadWithReturn
 
 # Local Dependencies
 from puzzle import *
@@ -58,6 +59,7 @@ class GraphicsEngine:
         self.basic_font = pygame.font.Font("freesansbold.ttf", BASIC_FONT_SIZE)
         self.solve_surface, self.solve_rect = \
             self.make_text('Solve', TEXT_COLOR, TILE_COLOR, self.window_width - 120, self.window_height - 30)
+        self.THREAD_solve = None
 
         pygame.display.set_caption(f"{self.board_width ** 2 - 1} Puzzle")
 
@@ -66,7 +68,21 @@ class GraphicsEngine:
         # main loop where user can move tiles
         while True:
             slide_to = None  # direction a tile should slide if there is one
-            self.draw_board(puzzle.board, MSG_SOLVED if puzzle.is_solution() else MSG_INSTRUCTIONS)
+
+            if puzzle.is_solution():
+                msg = MSG_SOLVED
+            elif self.THREAD_solve is not None:
+                msg = MSG_SEARCHING
+            else:
+                msg = MSG_INSTRUCTIONS
+
+            self.draw_board(puzzle.board, msg)
+
+            if self.THREAD_solve is not None and not self.THREAD_solve.is_alive():
+                solved_puzzle = self.THREAD_solve.join()
+                self.solve_animation(solved_puzzle)
+                puzzle.set_board(solved_puzzle.board)
+                self.THREAD_solve = None
 
             for event in pygame.event.get():  # event handling loop
                 if event.type == QUIT:
@@ -76,13 +92,12 @@ class GraphicsEngine:
                     spot_x, spot_y = self.get_spot_clicked(puzzle.board, event.pos[0], event.pos[1])
 
                     if (spot_x, spot_y) == (None, None):  # check if user clicked an option button
-                        if self.solve_rect.collidepoint(event.pos):
+                        if self.solve_rect.collidepoint(event.pos) and self.THREAD_solve is None:
                             self.draw_board(puzzle.board, MSG_SEARCHING)
                             pygame.display.update()
                             self.fps_clock.tick(FPS)
-                            solved_puzzle = solve_puzzle(puzzle)
-                            self.solve_animation(solved_puzzle)
-                            puzzle.set_board(solved_puzzle.board)
+                            self.THREAD_solve = ThreadWithReturn(target=solve_puzzle, args=(puzzle,))
+                            self.THREAD_solve.start()
 
                     else:  # user clicked on a tile
                         # check if the clicked tile was next to blank spot
@@ -97,6 +112,9 @@ class GraphicsEngine:
                             slide_to = DOWN
 
                 elif event.type == KEYUP:  # user used keyboard
+                    if event.key == K_ESCAPE:
+                        terminate()  # terminate if user activates Esc key
+
                     # check if user entered a key to move a tile
                     if event.key in (K_LEFT, K_a):
                         slide_to = LEFT
@@ -106,20 +124,18 @@ class GraphicsEngine:
                         slide_to = UP
                     elif event.key in (K_DOWN, K_s):
                         slide_to = DOWN
-                    elif event.key == K_ESCAPE:
-                        terminate()  # terminate if user activates Esc key
 
             # if user wants to move a tile
             if slide_to is not None and puzzle.is_valid_move(slide_to):
                 # show tile slide
-                self.slide_animation(puzzle, slide_to, MSG_INSTRUCTIONS, TILE_SLIDE_SPEED)
+                self.slide_animation(puzzle, slide_to, TILE_SLIDE_SPEED)
                 puzzle.set_board(puzzle.move(slide_to))
 
             pygame.display.update()
             self.fps_clock.tick(FPS)
 
     # function displays tile slide animation, does not check if move is valid
-    def slide_animation(self, puzzle: Puzzle, move: int, msg: str, speed: int):
+    def slide_animation(self, puzzle: Puzzle, move: int, speed: int):
         blank_y, blank_x = puzzle.blank_pos
 
         if move == UP:
@@ -138,7 +154,6 @@ class GraphicsEngine:
             raise ValueError
 
         # prepare base surface
-        self.draw_board(puzzle.board, msg)
         base_surf = self.display_surface.copy()
 
         # display blank space over the moving tile on base_surf surface
@@ -150,18 +165,18 @@ class GraphicsEngine:
             self.display_surface.blit(base_surf, (0, 0))
             if move == UP:
                 self.draw_tile(move_x, move_y, puzzle.board[move_y][move_x], 0, -i)
-            if move == DOWN:
+            elif move == DOWN:
                 self.draw_tile(move_x, move_y, puzzle.board[move_y][move_x], 0, i)
-            if move == LEFT:
+            elif move == LEFT:
                 self.draw_tile(move_x, move_y, puzzle.board[move_y][move_x], -i, 0)
-            if move == RIGHT:
+            elif move == RIGHT:
                 self.draw_tile(move_x, move_y, puzzle.board[move_y][move_x], i, 0)
 
             pygame.display.update()
             self.fps_clock.tick(FPS)
 
     # function draws board in window
-    def draw_board(self, board, message):
+    def draw_board(self, board: list, message: str):
         self.display_surface.fill(BG_COLOR)
 
         if message:
@@ -182,7 +197,7 @@ class GraphicsEngine:
         self.display_surface.blit(self.solve_surface, self.solve_rect)
 
     # function finds x and y board coordinates from x and y pixel coordinates
-    def get_spot_clicked(self, board, x, y):
+    def get_spot_clicked(self, board: list, x: int, y: int):
         for tile_y in range(len(board)):
             for tile_x in range(len(board[0])):
                 left, top = self.get_left_top(tile_x, tile_y)
@@ -192,13 +207,13 @@ class GraphicsEngine:
         return None, None
 
     # function gets left and top position of tile
-    def get_left_top(self, x, y):
+    def get_left_top(self, x: int, y: int):
         left = self.x_margin + (x * TILE_SIZE) + (x - 1)
         top = self.y_margin + (y * TILE_SIZE) + (y - 1)
         return left, top
 
     # function draws a tile at the given coordinates
-    def draw_tile(self, x, y, num, adj_x=0, adj_y=0):
+    def draw_tile(self, x: int, y: int, num: int, adj_x: int = 0, adj_y: int = 0):
         left, top = self.get_left_top(x, y)
 
         pygame.draw.rect(self.display_surface, TILE_COLOR, (left + adj_x, top + adj_y, TILE_SIZE, TILE_SIZE))
@@ -208,7 +223,7 @@ class GraphicsEngine:
         self.display_surface.blit(text_surf, text_rect)
 
     # function creates text objects for Surface and Rectangle
-    def make_text(self, text, color, bg_color, top, left):
+    def make_text(self, text: str, color: tuple, bg_color: tuple, top: int, left: int):
         text_surf = self.basic_font.render(text, True, color, bg_color)
         text_rect = text_surf.get_rect()
         text_rect.topleft = (top, left)
