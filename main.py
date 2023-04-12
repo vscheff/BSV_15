@@ -26,7 +26,7 @@ def main():
         num_tests = get_int_from_user("\nEnter desired number of tests: ", 1)
         plots = Plotting(usr)
 
-        for n in tqdm(range(min_val, max_val + 1), desc="Computing", unit="puzzle", colour="CYAN", mininterval=0):
+        for n in tqdm(range(min_val, max_val + 1), desc="Computing", unit="size", colour="CYAN", mininterval=0):
             puzzle = Puzzle(size=n)
             for _ in tqdm(range(num_tests), desc=f"{n**2-1:>2} Puzzle", unit="test", colour="CYAN", mininterval=0):
                 puzzle.generate()
