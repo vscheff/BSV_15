@@ -3,7 +3,7 @@ from timing_plotting import Plotting
 from tqdm import tqdm
 
 # Local dependencies
-from gui import gui
+from gui import GraphicsEngine
 from input_handler import get_board_from_file, get_int_from_user
 from puzzle import Puzzle, solve_puzzle
 
@@ -14,7 +14,9 @@ def main():
     prompt_choice = get_int_from_user("1. Launch GUI\n2. Plotting\n3. Import a test puzzle\n$ ", 1, 3)
 
     if prompt_choice == 1:
-        gui(Puzzle(size=get_int_from_user("\nEnter desired grid width: ", 1)))
+        size = get_int_from_user("\nEnter desired grid width: ", 1)
+        engine = GraphicsEngine(size)
+        engine.gui(Puzzle(size=size))
 
     elif prompt_choice == 2:
         usr = ""
