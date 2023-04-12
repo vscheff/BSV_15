@@ -60,9 +60,9 @@ class Puzzle:
     def is_valid_move(self, move: int):
         i, j = self.blank_pos
         
-        return (move == UP and i < self.board_size) or \
+        return (move == UP and i < self.board_size - 1) or \
                (move == DOWN and i > 0) or \
-               (move == LEFT and j < self.board_size) or \
+               (move == LEFT and j < self.board_size - 1) or \
                (move == RIGHT and j > 0) 
 
     def generate(self):

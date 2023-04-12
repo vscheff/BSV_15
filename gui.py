@@ -19,11 +19,13 @@ BLANK = None
 MIN_WINDOW_WIDTH = 640
 MIN_WINDOW_HEIGHT = 480
 BASIC_FONT_SIZE = 20
+TILE_SLIDE_SPEED = 8
 
 # In-Game Messages
 MSG_INSTRUCTIONS = "Click tiles next to empty space or press arrow keys to slide tiles."
+MSG_SEARCHING = "Finding Solution (this may take a while)"
 MSG_SOLVED = "Solved! (Esc to close)"
-MSG_SOLVING = "Solving (this might take a while)"
+MSG_SOLVING = "Solving the game board"
 
 # Color dictionary (R    G    B  )
 COLORS = {
@@ -45,6 +47,7 @@ MESSAGE_COLOR = COLORS["white"]
 class GraphicsEngine:
     def __init__(self, size):
         pygame.init()
+
         self.board_width = self.board_height = size
         self.window_width = max(160 * size, MIN_WINDOW_WIDTH)
         self.window_height = max(120 * size, MIN_WINDOW_HEIGHT)
@@ -56,49 +59,32 @@ class GraphicsEngine:
         self.solve_surface, self.solve_rect = \
             self.make_text('Solve', TEXT_COLOR, TILE_COLOR, self.window_width - 120, self.window_height - 30)
 
-    # creates gui where puzzle is a Puzzle class variable
-    def gui(self, puzzle: Puzzle):
         pygame.display.set_caption(f"{self.board_width ** 2 - 1} Puzzle")
 
-        self.get_starting_board(puzzle.board)
-
-        # Generate Solution Board
-        k = 1
-        solution_board = []
-        for i in range(self.board_height):
-            solution_board.append([])
-            for j in range(self.board_width):
-                solution_board[i].append(k)
-                k += 1
-        solution_board[-1][-1] = 0
-
+    # creates gui where puzzle is a Puzzle class variable
+    def gui(self, puzzle: Puzzle):
         # main loop where user can move tiles
         while True:
             slide_to = None  # direction a tile should slide if there is one
-            msg = MSG_INSTRUCTIONS
-
-            if puzzle.board == solution_board:
-                msg = MSG_SOLVED
-
-            self.draw_board(puzzle.board, msg)
-
-            if quit_check():
-                return
+            self.draw_board(puzzle.board, MSG_SOLVED if puzzle.is_solution() else MSG_INSTRUCTIONS)
 
             for event in pygame.event.get():  # event handling loop
+                if event.type == QUIT:
+                    terminate()
                 # if user clicked in the window, get cords of spot clicked
-                if event.type == MOUSEBUTTONUP:  # if user used mouse
+                elif event.type == MOUSEBUTTONUP:  # if user used mouse
                     spot_x, spot_y = self.get_spot_clicked(puzzle.board, event.pos[0], event.pos[1])
 
                     if (spot_x, spot_y) == (None, None):  # check if user clicked an option button
                         if self.solve_rect.collidepoint(event.pos):
-                            self.draw_board(puzzle.board, MSG_SOLVING)
+                            self.draw_board(puzzle.board, MSG_SEARCHING)
                             pygame.display.update()
                             self.fps_clock.tick(FPS)
                             solved_puzzle = solve_puzzle(puzzle)
-                            puzzle = Puzzle(self.solve_animation(solved_puzzle).board, self.board_height, None)
+                            self.solve_animation(solved_puzzle)
+                            puzzle.set_board(solved_puzzle.board)
 
-                    else:  # use clicked on a tile
+                    else:  # user clicked on a tile
                         # check if the clicked tile was next to blank spot
                         blank_y, blank_x = puzzle.blank_pos
                         if spot_x == blank_x + 1 and spot_y == blank_y:
@@ -112,29 +98,25 @@ class GraphicsEngine:
 
                 elif event.type == KEYUP:  # user used keyboard
                     # check if user entered a key to move a tile
-                    if event.key in (K_LEFT, K_a) and puzzle.is_valid_move(LEFT):
+                    if event.key in (K_LEFT, K_a):
                         slide_to = LEFT
-                    elif event.key in (K_RIGHT, K_d) and puzzle.is_valid_move(RIGHT):
+                    elif event.key in (K_RIGHT, K_d):
                         slide_to = RIGHT
-                    elif event.key in (K_UP, K_w) and puzzle.is_valid_move(UP):
+                    elif event.key in (K_UP, K_w):
                         slide_to = UP
-                    elif event.key in (K_DOWN, K_s) and puzzle.is_valid_move(DOWN):
+                    elif event.key in (K_DOWN, K_s):
                         slide_to = DOWN
+                    elif event.key == K_ESCAPE:
+                        terminate()  # terminate if user activates Esc key
 
             # if user wants to move a tile
-            if slide_to is not None:
+            if slide_to is not None and puzzle.is_valid_move(slide_to):
                 # show tile slide
-                self.slide_animation(puzzle, slide_to, MSG_INSTRUCTIONS, 8)
+                self.slide_animation(puzzle, slide_to, MSG_INSTRUCTIONS, TILE_SLIDE_SPEED)
                 puzzle.set_board(puzzle.move(slide_to))
 
             pygame.display.update()
             self.fps_clock.tick(FPS)
-
-    # function creates starting board
-    def get_starting_board(self, board: list):
-        self.draw_board(board, "")
-        pygame.display.update()
-        pygame.time.wait(500)  # pause 500 ms for effect
 
     # function displays tile slide animation, does not check if move is valid
     def slide_animation(self, puzzle: Puzzle, move: int, msg: str, speed: int):
@@ -165,7 +147,6 @@ class GraphicsEngine:
 
         # animate tile slide
         for i in range(0, TILE_SIZE, speed):
-            quit_check()
             self.display_surface.blit(base_surf, (0, 0))
             if move == UP:
                 self.draw_tile(move_x, move_y, puzzle.board[move_y][move_x], 0, -i)
@@ -255,6 +236,7 @@ class GraphicsEngine:
 # function terminates gui
 def terminate():
     pygame.quit()
+    exit('\nProgram Quit... Good Bye!')
 
 # function checks if user selected the quit button
 def quit_check():
