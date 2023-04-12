@@ -63,7 +63,7 @@ class Plotting:
                  color=self.color5, label="All times")
 
         # add labels and title
-        plt.xlabel("n")
+        plt.xlabel("Puzzle size (n)")
         plt.ylabel("Time (ns)")
         plt.title("Time to solve the puzzle")
 
