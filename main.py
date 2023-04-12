@@ -29,6 +29,7 @@ def main():
         for n in tqdm(range(min_val, max_val + 1), desc="Computing", unit="puzzle", colour="CYAN", mininterval=0):
             puzzle = Puzzle(size=n)
             for _ in tqdm(range(num_tests), desc=f"{n**2-1:>2} Puzzle", unit="test", colour="CYAN", mininterval=0):
+                puzzle.generate()
                 start_time = perf_counter_ns()
                 solve_puzzle(puzzle)
                 plots.add_numbers_to_dataframe(n, perf_counter_ns() - start_time)
