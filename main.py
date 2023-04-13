@@ -16,7 +16,8 @@ def main():
     if prompt_choice == 1:
         size = get_int_from_user("\nEnter desired grid width: ", 1)
         engine = GraphicsEngine(size)
-        engine.gui(Puzzle(size=size))
+        engine.initialize(Puzzle(size=size))
+        engine.gui()
 
     elif prompt_choice == 2:
         usr = ""
