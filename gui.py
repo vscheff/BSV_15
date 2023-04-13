@@ -59,30 +59,31 @@ class GraphicsEngine:
         self.basic_font = pygame.font.Font("freesansbold.ttf", BASIC_FONT_SIZE)
         self.solve_surface, self.solve_rect = \
             self.make_text('Solve', TEXT_COLOR, TILE_COLOR, self.window_width - 120, self.window_height - 30)
-        self.THREAD_solve = None
 
         pygame.display.set_caption(f"{self.board_width ** 2 - 1} Puzzle")
 
     # creates gui where puzzle is a Puzzle class variable
     def gui(self, puzzle: Puzzle):
+        thread_solve = None
+
         # main loop where user can move tiles
         while True:
             slide_to = None  # direction a tile should slide if there is one
 
             if puzzle.is_solution():
                 msg = MSG_SOLVED
-            elif self.THREAD_solve is not None:
+            elif thread_solve is not None:
                 msg = MSG_SEARCHING
             else:
                 msg = MSG_INSTRUCTIONS
 
             self.draw_board(puzzle.board, msg)
 
-            if self.THREAD_solve is not None and not self.THREAD_solve.is_alive():
-                solved_puzzle = self.THREAD_solve.join()
+            if thread_solve is not None and not thread_solve.is_alive():
+                solved_puzzle = thread_solve.join()
                 self.solve_animation(solved_puzzle)
                 puzzle.set_board(solved_puzzle.board)
-                self.THREAD_solve = None
+                thread_solve = None
 
             for event in pygame.event.get():  # event handling loop
                 if event.type == QUIT:
@@ -92,12 +93,9 @@ class GraphicsEngine:
                     spot_x, spot_y = self.get_spot_clicked(puzzle.board, event.pos[0], event.pos[1])
 
                     if (spot_x, spot_y) == (None, None):  # check if user clicked an option button
-                        if self.solve_rect.collidepoint(event.pos) and self.THREAD_solve is None:
-                            self.draw_board(puzzle.board, MSG_SEARCHING)
-                            pygame.display.update()
-                            self.fps_clock.tick(FPS)
-                            self.THREAD_solve = ThreadWithReturn(target=solve_puzzle, args=(puzzle,))
-                            self.THREAD_solve.start()
+                        if self.solve_rect.collidepoint(event.pos) and thread_solve is None:
+                            thread_solve = ThreadWithReturn(target=solve_puzzle, args=(puzzle,))
+                            thread_solve.start()
 
                     else:  # user clicked on a tile
                         # check if the clicked tile was next to blank spot
@@ -219,7 +217,7 @@ class GraphicsEngine:
         pygame.draw.rect(self.display_surface, TILE_COLOR, (left + adj_x, top + adj_y, TILE_SIZE, TILE_SIZE))
         text_surf = self.basic_font.render(str(num), True, TEXT_COLOR)
         text_rect = text_surf.get_rect()
-        text_rect.center = left + int(TILE_SIZE / 2) + adj_x, top + int(TILE_SIZE / 2) + adj_y
+        text_rect.center = left + TILE_SIZE // 2 + adj_x, top + TILE_SIZE // 2 + adj_y
         self.display_surface.blit(text_surf, text_rect)
 
     # function creates text objects for Surface and Rectangle
@@ -231,21 +229,16 @@ class GraphicsEngine:
 
     def solve_animation(self, node: Puzzle):
         path = [node]
-        solution_node = None
 
         while node.parent:
             node = node.parent
             path.append(node)
 
         for i in range(len(path) - 1, -1, -1):
-            if path[i].is_solution:
-                solution_node = path[i]
             self.draw_board(path[i].board, MSG_SOLVING)
             pygame.display.update()
             self.fps_clock.tick(FPS)
             quit_check()
-
-        return solution_node
 
 
 # function terminates gui
