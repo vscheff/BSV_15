@@ -25,10 +25,10 @@ class Puzzle:
         else:
             self.set_board(board)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return "\n".join(["".join([f"{str(i):<3}" for i in row]) for row in self.board])
 
-    def __lt__(self, other: Puzzle):
+    def __lt__(self, other: Puzzle) -> bool:
         return self.cost < other.cost if self.cost != other.cost else self.inversions < other.inversions
 
     def set_board(self, board: list):
@@ -39,11 +39,11 @@ class Puzzle:
         self.inversions = self.count_inversions()
 
     # Checks if the current board is the solution board
-    def is_solution(self):
+    def is_solution(self) -> bool:
         return self.cost == 0
 
     # check if a 15 puzzle is solvable or not
-    def is_solvable(self):
+    def is_solvable(self) -> bool:
         x_pos = self.board_size - self.blank_pos[0]
 
         if self.board_size % 2:
@@ -57,7 +57,7 @@ class Puzzle:
         
         return False
 
-    def is_valid_move(self, move: int):
+    def is_valid_move(self, move: int) -> bool:
         i, j = self.blank_pos
         
         return (move == UP and i < self.board_size - 1) or \
@@ -81,7 +81,7 @@ class Puzzle:
         else:
             self.cost = self.count_bad_tiles()
 
-    def move(self, direction: int):
+    def move(self, direction: int) -> list[list[int]] | None:
         i, j = self.blank_pos
 
         # move it in the given direction
@@ -114,7 +114,7 @@ class Puzzle:
         
         return None
 
-    def count_bad_tiles(self):
+    def count_bad_tiles(self) -> int:
         count = 0
         k = 1
         
@@ -127,7 +127,7 @@ class Puzzle:
         return count
 
     # find number of inversions in 15 puzzle
-    def count_inversions(self):
+    def count_inversions(self) -> int:
         sequence = []
 
         for row in self.board:
@@ -143,14 +143,14 @@ class Puzzle:
         return inversions
 
     # find position of blank tile
-    def find_blank_pos(self):
+    def find_blank_pos(self) -> tuple[int, int]:
         for i in range(self.board_size):
             for j in range(self.board_size):
                 if self.board[i][j] == 0:
                     return i, j
 
 
-def solve_puzzle(puzzle: Puzzle):
+def solve_puzzle(puzzle: Puzzle) -> Puzzle | None:
     live_nodes = MinHeap()
     live_nodes.insert(puzzle)
     checked_boards = {str(puzzle.board): True}

@@ -1,15 +1,15 @@
 # Computes the index of the parent node for a given index
-def get_parent(i):
+def get_parent(i: int) -> int:
     return (i - 1) // 2
 
 
 # Computes the index of the node to the left of a given index
-def get_left(i):
+def get_left(i: int) -> int:
     return 2 * i + 1
 
 
 # Computes the index of the node to the right of a given index
-def get_right(i):
+def get_right(i) -> int:
     return 2 * i + 2
 
 
@@ -19,10 +19,10 @@ class MinHeap:
     def __init__(self):
         self.nodes = []
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.nodes)
 
-    def __bool__(self):
+    def __bool__(self) -> bool:
         return bool(self.nodes)
 
     # Swaps the nodes at two given indexes
@@ -33,7 +33,7 @@ class MinHeap:
 
     # Recursive function that ensures the order property of our min heap
     # param index - index of the element that is potentially in the wrong place
-    def heapify(self, index):
+    def heapify(self, index: int):
         left = get_left(index)
         right = get_right(index)
         smallest = index

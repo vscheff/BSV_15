@@ -13,6 +13,6 @@ class ThreadWithReturn(Thread):
         if self._target is not None:
             self.ret = self._target(*self._args, **self._kwargs)
 
-    def join(self, *args) -> Puzzle:
+    def join(self, *args):
         Thread.join(self, *args)
         return self.ret

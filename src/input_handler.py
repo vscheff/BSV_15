@@ -1,16 +1,16 @@
-from os import path
+from os import getcwd
 from sys import platform
-
+from typing import TextIO
 
 if platform == "win32":
-    TEST_DIR = f"{path.dirname(path.realpath(__file__))}\\test_boards\\"
+    TEST_DIR = f"{getcwd()}\\test_boards\\"
 else:
-    TEST_DIR = f"{path.dirname(path.realpath(__file__))}/test_boards/"
+    TEST_DIR = f"{getcwd()}/test_boards/"
 
-def get_int_from_user(prompt: str, min_val: int = None, max_val: int = None):
+def get_int_from_user(prompt: str, min_val: int = None, max_val: int = None) -> int:
     while True:
         try:
-            usr_inp = int(input(prompt))
+            usr_inp = int(input(f"{prompt}\n$ "))
         except ValueError:
             print("\nERROR: Please enter a valid integer.")
             continue
@@ -22,7 +22,7 @@ def get_int_from_user(prompt: str, min_val: int = None, max_val: int = None):
         else:
             return usr_inp
 
-def get_board_from_file():
+def get_board_from_file() -> list:
     while True:
         with open_board_file() as in_file:
             try:
@@ -31,7 +31,7 @@ def get_board_from_file():
                 print("\nERROR: Selected input file is not formatted correctly.\n")
                 continue
 
-def open_board_file():
+def open_board_file() -> TextIO:
     while True:
         usr_inp = input("\nEnter filename: ").strip()
 
