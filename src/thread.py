@@ -1,5 +1,7 @@
 from threading import Thread
-from puzzle import Puzzle
+
+# Local Dependencies
+from src.puzzle import Puzzle
 
 
 class ThreadWithReturn(Thread):

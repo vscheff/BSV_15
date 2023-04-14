@@ -3,14 +3,15 @@
 # http://inventwithpython.com/pygame/chapter4.html
 
 from os import environ
+
 environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "True"
 
 import pygame
 from pygame.locals import *
-from thread import ThreadWithReturn
 
 # Local Dependencies
-from puzzle import *
+from src.puzzle import *
+from src.thread import ThreadWithReturn
 
 # create constants
 TILE_SIZE = 80
@@ -69,10 +70,13 @@ class GraphicsEngine:
         self.puzzle = puzzle
         self.top_message = None
         self.THREAD_solve = None
+        self.move_counter = None
+        self.total_moves = 0
 
         pygame.display.set_caption(f"{self.board_width ** 2 - 1} Puzzle")
         self.display.fill(BG_COLOR)
         self.draw_message(MSG_INSTRUCTIONS)
+        self.draw_move_count()
         self.draw_board(puzzle.board)
         solve_surface, solve_rect = \
             self.make_text("Solve", TEXT_COLOR, TILE_COLOR, self.window_width - 120, self.window_height - 30)
@@ -92,10 +96,7 @@ class GraphicsEngine:
                 self.draw_message(MSG_SOLVED)
 
             # if user wants to move a tile
-            if slide_to := self.event_handler():
-                if not self.puzzle.is_valid_move(slide_to):
-                    continue
-
+            if (slide_to := self.event_handler()) and self.puzzle.is_valid_move(slide_to):
                 # show tile slide
                 self.slide_animation(slide_to, TILE_SLIDE_SPEED)
                 self.puzzle.set_board(self.puzzle.move(slide_to))
@@ -105,10 +106,14 @@ class GraphicsEngine:
                 elif self.THREAD_solve is None:
                     self.draw_message(MSG_INSTRUCTIONS)
 
+                self.total_moves += 1
+                self.draw_move_count()
+
             pygame.display.flip()
             self.fps_clock.tick(FPS)
 
     def event_handler(self):
+
         slide_to = None
 
         for event in pygame.event.get():  # event handling loop
@@ -240,6 +245,14 @@ class GraphicsEngine:
         self.display.blit(text_surf, text_rect)
         self.top_message = text_rect
 
+    def draw_move_count(self):
+        if self.move_counter is not None:
+            pygame.draw.rect(self.display, BG_COLOR, self.move_counter)
+
+        text_surf, text_rect = self.make_text(f"Total Moves: {str(self.total_moves)}", MESSAGE_COLOR, BG_COLOR, 5, 30)
+        self.display.blit(text_surf, text_rect)
+        self.move_counter = text_rect
+
     # function creates text objects for Surface and Rectangle
     def make_text(self, text: str, color: tuple, bg_color: tuple, top: int, left: int):
         text_surf = self.basic_font.render(text, True, color, bg_color)
@@ -258,6 +271,8 @@ class GraphicsEngine:
 
         for i in range(len(path) - 1, -1, -1):
             self.draw_board(path[i].board)
+            self.total_moves += 1
+            self.draw_move_count()
             pygame.display.flip()
             self.fps_clock.tick(FPS)
             quit_check()
@@ -267,6 +282,7 @@ class GraphicsEngine:
 def terminate():
     pygame.quit()
     exit('\nProgram Quit... Good Bye!')
+
 
 # function checks if user selected the quit button
 def quit_check():

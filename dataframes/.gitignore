@@ -2,4 +2,9 @@
 *
 # Except this file and combined data
 !.gitignore
-!all.png
+!bdub_all.csv
+!bdub_mean.csv
+!sam_all.csv
+!sam_mean.csv
+!von_all.csv
+!von_mean.csv

@@ -2,8 +2,8 @@ from __future__ import annotations
 from random import shuffle
 from copy import deepcopy
 
-# Local dependencies
-from minheap import MinHeap
+# Local Dependencies
+from src.minheap import MinHeap
 
 UP = 1
 DOWN = 2

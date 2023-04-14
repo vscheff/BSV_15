@@ -1,17 +1,17 @@
 from time import perf_counter_ns
-from timing_plotting import Plotting
 from tqdm import tqdm
 
 # Local dependencies
-from gui import GraphicsEngine
-from input_handler import get_board_from_file, get_int_from_user
-from puzzle import Puzzle, solve_puzzle
-
+from src.timing_plotting import Plotting
+from src.gui import GraphicsEngine
+from src.input_handler import get_board_from_file, get_int_from_user
+from src.puzzle import Puzzle, solve_puzzle
 
 DEBUG = False
 
+
 def main():
-    prompt_choice = get_int_from_user("1. Launch GUI\n2. Plotting\n3. Import a test puzzle\n$ ", 1, 3)
+    prompt_choice = get_int_from_user("1. Launch GUI\n2. Plot Timing Data\n3. Import Test Puzzle\n$ ", 1, 3)
 
     if prompt_choice == 1:
         engine = GraphicsEngine(Puzzle(size=get_int_from_user("\nEnter desired grid width: ", 1)))
@@ -20,7 +20,7 @@ def main():
     elif prompt_choice == 2:
         usr = ""
         while not usr:
-            usr = input("\nEnter your username: ")
+            usr = input("\nEnter your username: ").lower()
 
         min_val = get_int_from_user("\nEnter minimum grid width: ", 1)
         max_val = get_int_from_user("\nEnter maximum grid width: ", min_val)
@@ -29,7 +29,7 @@ def main():
 
         for n in tqdm(range(min_val, max_val + 1), desc="Computing", unit="size", colour="CYAN", mininterval=0):
             puzzle = Puzzle(size=n)
-            for _ in tqdm(range(num_tests), desc=f"{n**2-1:>2} Puzzle", unit="test", colour="CYAN", mininterval=0):
+            for _ in tqdm(range(num_tests), desc=f"{n ** 2 - 1:>2} Puzzle", unit="test", colour="CYAN", mininterval=0):
                 puzzle.generate()
                 start_time = perf_counter_ns()
                 solve_puzzle(puzzle)

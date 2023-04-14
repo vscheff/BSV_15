@@ -2,9 +2,11 @@
 def get_parent(i):
     return (i - 1) // 2
 
+
 # Computes the index of the node to the left of a given index
 def get_left(i):
     return 2 * i + 1
+
 
 # Computes the index of the node to the right of a given index
 def get_right(i):
@@ -53,13 +55,13 @@ class MinHeap:
         i = len(self.nodes)
         j = get_parent(i)
         self.nodes.append(new_node)
-        
+
         # Move the new node up the tree ensuring the heap satisfies the order property
         while i and self.nodes[i] < self.nodes[j]:
             self.swap(i, j)
             i = j
             j = get_parent(i)
-    
+
     # Removes and returns the root node of the heap
     # return      None - if the heap is empty
     # return root_node - node at the root of the tree
