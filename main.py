@@ -14,9 +14,7 @@ def main():
     prompt_choice = get_int_from_user("1. Launch GUI\n2. Plotting\n3. Import a test puzzle\n$ ", 1, 3)
 
     if prompt_choice == 1:
-        size = get_int_from_user("\nEnter desired grid width: ", 1)
-        engine = GraphicsEngine(size)
-        engine.initialize(Puzzle(size=size))
+        engine = GraphicsEngine(Puzzle(size=get_int_from_user("\nEnter desired grid width: ", 1)))
         engine.gui()
 
     elif prompt_choice == 2:
