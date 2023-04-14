@@ -5,10 +5,10 @@ from copy import deepcopy
 # Local dependencies
 from minheap import MinHeap
 
-UP = 0
-DOWN = 1
-LEFT = 2
-RIGHT = 3
+UP = 1
+DOWN = 2
+LEFT = 3
+RIGHT = 4
 
 
 class Puzzle:
