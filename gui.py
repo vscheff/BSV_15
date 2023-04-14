@@ -3,6 +3,7 @@
 # http://inventwithpython.com/pygame/chapter4.html
 
 from os import environ
+
 environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "True"
 
 import pygame
@@ -12,7 +13,6 @@ from thread import ThreadWithReturn
 # Local Dependencies
 from puzzle import *
 
-
 # create constants
 TILE_SIZE = 80
 FPS = 30
@@ -21,6 +21,7 @@ MIN_WINDOW_WIDTH = 640
 MIN_WINDOW_HEIGHT = 480
 BASIC_FONT_SIZE = 20
 TILE_SLIDE_SPEED = 8
+BORDER_WIDTH = 4
 
 # In-Game Messages
 MSG_INSTRUCTIONS = "Click tiles next to empty space or press arrow keys to slide tiles."
@@ -30,11 +31,11 @@ MSG_SOLVING = "Solving the game board"
 
 # Color dictionary (R    G    B  )
 COLORS = {
-          "black": (0,   0,   0),
-          "white": (255, 255, 255),
-          "gold":  (200, 180, 0),
-          "brown": (100, 50,  0)
-         }
+    "black": (0, 0, 0),
+    "white": (255, 255, 255),
+    "gold": (200, 180, 0),
+    "brown": (100, 50, 0)
+}
 
 # set colors
 BG_COLOR = COLORS["brown"]
@@ -45,6 +46,7 @@ BUTTON_COLOR = COLORS["white"]
 BUTTON_TEXT_COLOR = COLORS["black"]
 MESSAGE_COLOR = COLORS["white"]
 
+
 class GraphicsEngine:
     def __init__(self, size):
         self.board_width = self.board_height = size
@@ -53,7 +55,7 @@ class GraphicsEngine:
         self.x_margin = (self.window_width - TILE_SIZE * self.board_width) // 2
         self.y_margin = (self.window_height - TILE_SIZE * self.board_height) // 2
         self.fps_clock = pygame.time.Clock()
-        self.display_surface = pygame.display.set_mode((self.window_width, self.window_height))
+        self.display = pygame.display.set_mode((self.window_width, self.window_height))
         self.basic_font = None
         self.solve_rect = None
         self.top_message = None
@@ -71,8 +73,8 @@ class GraphicsEngine:
             self.make_text('Solve', TEXT_COLOR, TILE_COLOR, self.window_width - 120, self.window_height - 30)
         self.solve_rect = solve_rect
 
-        self.display_surface.fill(BG_COLOR)
-        self.display_surface.blit(solve_surface, solve_rect)
+        self.display.fill(BG_COLOR)
+        self.display.blit(solve_surface, solve_rect)
         self.draw_message(MSG_INSTRUCTIONS)
         self.draw_board(puzzle.board)
 
@@ -167,14 +169,14 @@ class GraphicsEngine:
             raise ValueError
 
         # prepare base surface
-        base_surf = self.display_surface.copy()
+        base_surf = self.display.copy()
 
         # display blank space over the moving tile on base_surf surface
         move_left, move_top = self.get_left_top(move_x, move_y)
 
         # animate tile slide
         for i in range(speed, TILE_SIZE, speed):
-            self.display_surface.blit(base_surf, (0, 0))
+            self.display.blit(base_surf, (0, 0))
             pygame.draw.rect(base_surf, BG_COLOR, (move_left, move_top, TILE_SIZE, TILE_SIZE))
             if move == UP:
                 self.draw_tile(move_x, move_y, puzzle.board[move_y][move_x], 0, -i)
@@ -188,7 +190,7 @@ class GraphicsEngine:
             pygame.display.flip()
             self.fps_clock.tick(FPS)
 
-        self.display_surface.blit(base_surf, (0, 0))
+        self.display.blit(base_surf, (0, 0))
         self.draw_tile(blank_x, blank_y, puzzle.board[move_y][move_x])
         pygame.display.flip()
 
@@ -198,16 +200,16 @@ class GraphicsEngine:
         top = self.y_margin
         width = self.board_width * TILE_SIZE
         height = self.board_height * TILE_SIZE
-        offset = self.board_width
+        border_offset = 2 * BORDER_WIDTH + self.board_width - 1
+        border_rect = (left - BORDER_WIDTH - 1, top - BORDER_WIDTH - 1, width + border_offset, height + border_offset)
 
-        pygame.draw.rect(self.display_surface, BG_COLOR, (self.x_margin, self.y_margin, width+offset, height+offset))
+        pygame.draw.rect(self.display, BG_COLOR, (left, top, width + self.board_width, height + self.board_height))
+        pygame.draw.rect(self.display, BORDER_COLOR, border_rect, BORDER_WIDTH)
 
         for x in range(len(board)):
             for y in range(len(board[0])):
-                if board[y][x] and board[y][x] != 0:
+                if board[y][x]:
                     self.draw_tile(x, y, board[y][x])
-
-        pygame.draw.rect(self.display_surface, BORDER_COLOR, (left - 5, top - 5, width + 11, height + 11), 4)
 
     # function finds x and y board coordinates from x and y pixel coordinates
     def get_spot_clicked(self, board: list, x: int, y: int):
@@ -229,18 +231,18 @@ class GraphicsEngine:
     def draw_tile(self, x: int, y: int, num: int, adj_x: int = 0, adj_y: int = 0):
         left, top = self.get_left_top(x, y)
 
-        pygame.draw.rect(self.display_surface, TILE_COLOR, (left + adj_x, top + adj_y, TILE_SIZE, TILE_SIZE))
+        pygame.draw.rect(self.display, TILE_COLOR, (left + adj_x, top + adj_y, TILE_SIZE, TILE_SIZE))
         text_surf = self.basic_font.render(str(num), True, TEXT_COLOR)
         text_rect = text_surf.get_rect()
         text_rect.center = left + TILE_SIZE // 2 + adj_x, top + TILE_SIZE // 2 + adj_y
-        self.display_surface.blit(text_surf, text_rect)
+        self.display.blit(text_surf, text_rect)
 
     def draw_message(self, msg: str):
         if self.top_message is not None:
-            pygame.draw.rect(self.display_surface, BG_COLOR, self.top_message)
+            pygame.draw.rect(self.display, BG_COLOR, self.top_message)
 
         text_surf, text_rect = self.make_text(msg, MESSAGE_COLOR, BG_COLOR, 5, 5)
-        self.display_surface.blit(text_surf, text_rect)
+        self.display.blit(text_surf, text_rect)
         self.top_message = text_rect
 
     # function creates text objects for Surface and Rectangle
@@ -270,6 +272,7 @@ class GraphicsEngine:
 def terminate():
     pygame.quit()
     exit('\nProgram Quit... Good Bye!')
+
 
 # function checks if user selected the quit button
 def quit_check():
