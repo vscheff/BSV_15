@@ -1,6 +1,7 @@
 # References:
 # https://www.pygame.org/project/3096/5107
 # http://inventwithpython.com/pygame/chapter4.html
+from __future__ import annotations
 
 from os import environ
 environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "True"
