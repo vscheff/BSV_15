@@ -26,7 +26,7 @@ class Puzzle:
             self.set_board(board)
 
     def __str__(self) -> str:
-        return "\n".join(["".join([f"{str(i):<3}" for i in row]) for row in self.board])
+        return '\n'.join(["".join([f"{str(i):<3}" for i in row]) for row in self.board])
 
     def __lt__(self, other: Puzzle) -> bool:
         return self.cost < other.cost if self.cost != other.cost else self.inversions < other.inversions

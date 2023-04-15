@@ -1,5 +1,4 @@
 from time import perf_counter_ns
-from tqdm import tqdm
 
 # Local dependencies
 from src.timing_plotting import Plotting
@@ -18,35 +17,13 @@ def main():
         engine.launch_gui()
 
     elif prompt_choice == 2:
-        usr = ""
-        while not usr:
-            usr = input("\nEnter your username: ").lower()
+        plots = Plotting()
 
-        plots = Plotting(usr)
-
-        if get_int_from_user("\n1. Generate and Plot New Data\n2. Plot existing data", 1, 2) == 2:
+        if get_int_from_user("\n1. Generate and Plot New Data\n2. Plot existing data", 1, 2) == 1:
+            plots.get_experimental_data(DEBUG)
+        else:
             plots.read_csv()
             print(f"\nPlot exported to: {plots.plot_all_data(DEBUG)}")
-            return
-
-        min_val = get_int_from_user("\nEnter minimum grid width: ", 1)
-        max_val = get_int_from_user("\nEnter maximum grid width: ", min_val)
-        num_tests = get_int_from_user("\nEnter desired number of tests: ", 1)
-
-        for n in tqdm(range(min_val, max_val + 1), desc="Computing", unit="size", colour="CYAN", mininterval=0):
-            puzzle = Puzzle(size=n)
-            for _ in tqdm(range(num_tests), desc=f"{n ** 2 - 1:>2} Puzzle", unit="test", colour="CYAN", mininterval=0):
-                puzzle.generate()
-                start_time = perf_counter_ns()
-                solve_puzzle(puzzle)
-                plots.add_numbers_to_dataframe(n, perf_counter_ns() - start_time)
-
-        plots.calculate_mean_time()
-        plots.dataframe_to_csv()
-        plots.plot_data(DEBUG)
-
-        if DEBUG:
-            plots.print_dataframe()
 
     elif prompt_choice == 3:
         input_board = get_board_from_file()
@@ -58,8 +35,6 @@ def main():
             start_time = perf_counter_ns()
             solve_puzzle(puzzle)
             total_time += perf_counter_ns() - start_time
-
-            puzzle.set_board(input_board)
 
         print(f"\nAverage time to solve the puzzle: {total_time // num_tests / 1000000000:.4f} seconds")
 

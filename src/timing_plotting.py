@@ -1,5 +1,11 @@
 import matplotlib.pyplot as plt
 import pandas as pd
+from time import perf_counter_ns
+from tqdm import tqdm
+
+# Local Dependencies
+from src.input_handler import get_int_from_user
+from src.puzzle import Puzzle, solve_puzzle
 
 DATAFRAME = "./dataframes/"
 PLOTS = "./plots/"
@@ -27,8 +33,11 @@ colors = {
 
 
 class Plotting:
-    def __init__(self, user: str):
-        self.user = user
+    def __init__(self):
+        self.user = ""
+        while not self.user:
+            self.user = input("\nEnter your username: ").lower()
+
         self.users = []
 
         self.dataframes = {INPUT_DF:
@@ -38,10 +47,10 @@ class Plotting:
             self.dataframes[name] = {"all":  pd.DataFrame(columns=['n', "time"]),
                                      "mean": pd.DataFrame(columns=['n', "time"])}
             self.users.append(name)
-        if user not in self.dataframes:
-            self.dataframes[user] = {"all":  pd.DataFrame(columns=['n', "time"]),
-                                     "mean": pd.DataFrame(columns=['n', "time"])}
-            self.users.append(user)
+        if self.user not in self.dataframes:
+            self.dataframes[self.user] = {"all":  pd.DataFrame(columns=['n', "time"]),
+                                          "mean": pd.DataFrame(columns=['n', "time"])}
+            self.users.append(self.user)
 
     def sort_dataframe(self):
         # sort the dataframe by n
@@ -70,8 +79,13 @@ class Plotting:
     def read_csv(self):
         # read all csv files and save them to dataframes
         for user in self.users:
-            self.dataframes[user]["all"] = pd.read_csv(f"{DATAFRAME}{user}_all.csv")
-            self.dataframes[user]["mean"] = pd.read_csv(f"{DATAFRAME}{user}_mean.csv")
+            try:
+                self.dataframes[user]["all"] = pd.read_csv(f"{DATAFRAME}{user}_all.csv")
+                self.dataframes[user]["mean"] = pd.read_csv(f"{DATAFRAME}{user}_mean.csv")
+            except FileNotFoundError:
+                print(f"\nERROR: No experimental data found for {user}.")
+                self.dataframes.pop(user)
+                self.users.remove(user)
 
     def plot_all_data(self, debug: bool) -> str:
         figure = plt.figure(figsize=(20, 10))
@@ -128,6 +142,26 @@ class Plotting:
         if debug:
             # show the plot
             plt.show()
+
+    def get_experimental_data(self, debug: bool):
+        min_val = get_int_from_user("\nEnter minimum grid width: ", 1)
+        max_val = get_int_from_user("\nEnter maximum grid width: ", min_val)
+        num_tests = get_int_from_user("\nEnter desired number of tests: ", 1)
+
+        for n in tqdm(range(min_val, max_val + 1), desc="Computing", unit="size", colour="CYAN", mininterval=0):
+            puzzle = Puzzle(size=n)
+            for _ in tqdm(range(num_tests), desc=f"{n ** 2 - 1:>2} Puzzle", unit="test", colour="CYAN", mininterval=0):
+                puzzle.generate()
+                start_time = perf_counter_ns()
+                solve_puzzle(puzzle)
+                self.add_numbers_to_dataframe(n, perf_counter_ns() - start_time)
+
+        self.calculate_mean_time()
+        self.dataframe_to_csv()
+        self.plot_data(debug)
+
+        if debug:
+            self.print_dataframe()
 
     # DEBUG - TESTING
     # ------------------------------------------------
