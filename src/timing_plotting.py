@@ -92,10 +92,13 @@ class Plotting:
 
         keys = iter(colors.keys())
         for user in self.users:
-            mean_df = self.dataframes[user]["mean"]
-            all_df = self.dataframes[user]["all"]
-            plt.plot(mean_df['n'], mean_df["time"], MEAN_SYM, color=colors[next(keys)], label=f"{user}_mean")
-            plt.plot(all_df['n'], all_df["time"], ALL_SYM, color=colors[next(keys)], label=f"{user}_all")
+            mean_n = self.dataframes[user]["mean"]['n'].to_numpy()
+            mean_time = self.dataframes[user]["mean"]["time"].to_numpy()
+            all_n = self.dataframes[user]["all"]['n'].to_numpy()
+            all_time = self.dataframes[user]["all"]["time"].to_numpy()
+
+            plt.plot(mean_n, mean_time, MEAN_SYM, color=colors[next(keys)], label=f"{user}_mean")
+            plt.plot(all_n, all_time, ALL_SYM, color=colors[next(keys)], label=f"{user}_all")
 
         plt.xlabel(X_AXIS)
         plt.yscale("log")
@@ -120,12 +123,14 @@ class Plotting:
         figure = plt.figure(figsize=(20, 10))
 
         # plot the data for mean times as a dashed line with color1 and label "Mean time"
-        mean_df = self.dataframes[INPUT_DF]["mean"]
-        plt.plot(mean_df['n'], mean_df["time"], MEAN_SYM, color=colors["blue"], label="Mean time")
+        mean_n = self.dataframes[INPUT_DF]["mean"]['n'].to_numpy()
+        mean_time = self.dataframes[INPUT_DF]["mean"]["time"].to_numpy()
+        plt.plot(mean_n, mean_time, MEAN_SYM, color=colors["blue"], label="Mean time")
 
         # plot the data for all times as "x" with color2 and label "All times"
-        all_df = self.dataframes[INPUT_DF]["all"]
-        plt.plot(all_df['n'], all_df["time"], ALL_SYM, color=colors["orange"], label="All times")
+        all_n = self.dataframes[INPUT_DF]["all"]['n'].to_numpy()
+        all_time = self.dataframes[INPUT_DF]["all"]["time"].to_numpy()
+        plt.plot(all_n, all_time, ALL_SYM, color=colors["orange"], label="All times")
 
         # add labels and title to the plot
         plt.xlabel(X_AXIS)
@@ -144,9 +149,9 @@ class Plotting:
             plt.show()
 
     def get_experimental_data(self, debug: bool):
-        min_val = get_int_from_user("\nEnter minimum grid width: ", 1)
-        max_val = get_int_from_user("\nEnter maximum grid width: ", min_val)
-        num_tests = get_int_from_user("\nEnter desired number of tests: ", 1)
+        min_val = get_int_from_user("Enter minimum grid width: ", 1)
+        max_val = get_int_from_user("Enter maximum grid width: ", min_val)
+        num_tests = get_int_from_user("Enter desired number of tests: ", 1)
 
         for n in tqdm(range(min_val, max_val + 1), desc="Computing", unit="size", colour="CYAN", mininterval=0):
             puzzle = Puzzle(size=n)

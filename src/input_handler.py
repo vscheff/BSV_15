@@ -10,7 +10,7 @@ else:
 def get_int_from_user(prompt: str, min_val: int = None, max_val: int = None) -> int:
     while True:
         try:
-            usr_inp = int(input(f"{prompt}\n$ "))
+            usr_inp = int(input(f"\n{prompt}\n$ "))
         except ValueError:
             print("\nERROR: Please enter a valid integer.")
             continue
@@ -28,7 +28,7 @@ def get_board_from_file() -> list:
             try:
                 return [[int(i) for i in line.split()] for line in in_file]
             except ValueError:
-                print("\nERROR: Selected input file is not formatted correctly.\n")
+                print("\nERROR: Selected input file is not formatted correctly.")
                 continue
 
 def open_board_file() -> TextIO:

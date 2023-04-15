@@ -19,7 +19,7 @@ def main():
     elif prompt_choice == 2:
         plots = Plotting()
 
-        if get_int_from_user("\n1. Generate and Plot New Data\n2. Plot existing data", 1, 2) == 1:
+        if get_int_from_user("1. Generate and Plot New Data\n2. Plot existing data", 1, 2) == 1:
             plots.get_experimental_data(DEBUG)
         else:
             plots.read_csv()
