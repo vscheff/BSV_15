@@ -68,10 +68,7 @@ class GraphicsEngine:
         self.tile_slide_speed = self.tile_size // TILE_SLIDE_RATIO
         self.x_margin = (WINDOW_WIDTH - self.tile_size * self.board_width) // 2
         self.y_margin = (WINDOW_HEIGHT - self.tile_size * self.board_height) // 2
-        
-        tile_font_size = self.tile_size // TILE_FONT_RATIO
-        self.tile_font = pg.font.Font(GAME_FONT, tile_font_size)
-        
+        self.tile_font = pg.font.Font(GAME_FONT, self.tile_size // TILE_FONT_RATIO)
         self.basic_font = pg.font.Font(GAME_FONT, BASIC_FONT_SIZE)
         self.fps_clock = pg.time.Clock()
         self.puzzle = puzzle
@@ -79,13 +76,17 @@ class GraphicsEngine:
         self.THREAD_solve = None
         self.move_counter = None
         self.total_moves = 0
+        self.solve_rect = None
 
+        self.initialize_display()
+
+    def initialize_display(self):
         pg.display.set_caption(f"{self.board_width ** 2 - 1} Puzzle")
         pg.display.set_icon(pg.image.load("icon.png"))
         self.display.fill(BG_COLOR)
         self.draw_message(MSG_INSTRUCTIONS)
         self.draw_move_count()
-        self.draw_board(puzzle.board)
+        self.draw_board(self.puzzle.board)
         solve_surface, solve_rect = \
             self.make_text("Solve", TEXT_COLOR, TILE_COLOR, WINDOW_WIDTH - 120, WINDOW_HEIGHT - 30)
         self.display.blit(solve_surface, solve_rect)
@@ -121,7 +122,6 @@ class GraphicsEngine:
             self.fps_clock.tick(FPS)
 
     def event_handler(self) -> int | None:
-
         slide_to = None
 
         for event in pg.event.get():  # event handling loop
