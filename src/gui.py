@@ -16,8 +16,8 @@ from src.thread import ThreadWithReturn
 # create constants
 FPS = 30
 BLANK = None
-WINDOW_WIDTH = 1280
-WINDOW_HEIGHT = 720
+WINDOW_WIDTH = 1600
+WINDOW_HEIGHT = 900
 BASIC_FONT_SIZE = 20
 TILE_FONT_RATIO = 4
 TILE_SLIDE_RATIO = 10
