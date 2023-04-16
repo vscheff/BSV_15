@@ -14,14 +14,15 @@ from src.puzzle import *
 from src.thread import ThreadWithReturn
 
 # create constants
-TILE_SIZE = 80
 FPS = 30
 BLANK = None
-MIN_WINDOW_WIDTH = 640
-MIN_WINDOW_HEIGHT = 480
+WINDOW_WIDTH = 1280
+WINDOW_HEIGHT = 720
 BASIC_FONT_SIZE = 20
-TILE_SLIDE_SPEED = 8
+TILE_FONT_RATIO = 4
+TILE_SLIDE_RATIO = 10
 BORDER_WIDTH = 4
+GAME_FONT = "freesansbold.ttf"
 
 # In-Game Messages
 MSG_INSTRUCTIONS = "Click tiles next to empty space or press arrow keys to slide tiles."
@@ -60,12 +61,18 @@ class GraphicsEngine:
         pg.init()
 
         self.board_width = self.board_height = puzzle.board_size
-        self.window_width = max(160 * puzzle.board_size, MIN_WINDOW_WIDTH)
-        self.window_height = max(120 * puzzle.board_size, MIN_WINDOW_HEIGHT)
-        self.display = pg.display.set_mode((self.window_width, self.window_height))
-        self.x_margin = (self.window_width - TILE_SIZE * self.board_width) // 2
-        self.y_margin = (self.window_height - TILE_SIZE * self.board_height) // 2
-        self.basic_font = pg.font.Font("freesansbold.ttf", BASIC_FONT_SIZE)
+        self.display = pg.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
+        self.safe_height = WINDOW_HEIGHT - 75
+        self.safe_width = WINDOW_WIDTH - 150
+        self.tile_size = (min(self.safe_width, self.safe_height) - self.board_width + 1) // self.board_width
+        self.tile_slide_speed = self.tile_size // TILE_SLIDE_RATIO
+        self.x_margin = (WINDOW_WIDTH - self.tile_size * self.board_width) // 2
+        self.y_margin = (WINDOW_HEIGHT - self.tile_size * self.board_height) // 2
+        
+        tile_font_size = self.tile_size // TILE_FONT_RATIO
+        self.tile_font = pg.font.Font(GAME_FONT, tile_font_size)
+        
+        self.basic_font = pg.font.Font(GAME_FONT, BASIC_FONT_SIZE)
         self.fps_clock = pg.time.Clock()
         self.puzzle = puzzle
         self.top_message = None
@@ -74,12 +81,13 @@ class GraphicsEngine:
         self.total_moves = 0
 
         pg.display.set_caption(f"{self.board_width ** 2 - 1} Puzzle")
+        pg.display.set_icon(pg.image.load("icon.png"))
         self.display.fill(BG_COLOR)
         self.draw_message(MSG_INSTRUCTIONS)
         self.draw_move_count()
         self.draw_board(puzzle.board)
         solve_surface, solve_rect = \
-            self.make_text("Solve", TEXT_COLOR, TILE_COLOR, self.window_width - 120, self.window_height - 30)
+            self.make_text("Solve", TEXT_COLOR, TILE_COLOR, WINDOW_WIDTH - 120, WINDOW_HEIGHT - 30)
         self.display.blit(solve_surface, solve_rect)
 
         self.solve_rect = solve_rect
@@ -98,7 +106,7 @@ class GraphicsEngine:
             # if user wants to move a tile
             if (slide_to := self.event_handler()) and self.puzzle.is_valid_move(slide_to):
                 # show tile slide
-                self.slide_animation(slide_to, TILE_SLIDE_SPEED)
+                self.slide_animation(slide_to)
                 self.puzzle.set_board(self.puzzle.move(slide_to))
 
                 if self.puzzle.is_solution():
@@ -150,7 +158,7 @@ class GraphicsEngine:
         return slide_to
 
     # function displays tile slide animation, does not check if move is valid
-    def slide_animation(self, move: int, speed: int):
+    def slide_animation(self, move: int):
         blank_y, blank_x = self.puzzle.blank_pos
 
         if move == UP:
@@ -173,10 +181,10 @@ class GraphicsEngine:
 
         # display blank space over the moving tile on base_surf surface
         move_left, move_top = self.get_left_top(move_x, move_y)
-        pg.draw.rect(base_surf, BG_COLOR, (move_left, move_top, TILE_SIZE, TILE_SIZE))
+        pg.draw.rect(base_surf, BG_COLOR, (move_left, move_top, self.tile_size, self.tile_size))
 
         # animate tile slide
-        for i in range(speed, TILE_SIZE, speed):
+        for i in range(self.tile_slide_speed, self.tile_size, self.tile_slide_speed):
             self.display.blit(base_surf, (0, 0))
             if move == UP:
                 self.draw_tile(move_x, move_y, self.puzzle.board[move_y][move_x], 0, -i)
@@ -198,8 +206,8 @@ class GraphicsEngine:
     def draw_board(self, board: list):
         left = self.x_margin
         top = self.y_margin
-        width = self.board_width * TILE_SIZE
-        height = self.board_height * TILE_SIZE
+        width = self.board_width * self.tile_size
+        height = self.board_height * self.tile_size
         border_offset = 2 * BORDER_WIDTH + self.board_width - 1
         border_rect = (left - BORDER_WIDTH - 1, top - BORDER_WIDTH - 1, width + border_offset, height + border_offset)
 
@@ -216,25 +224,25 @@ class GraphicsEngine:
         for tile_y in range(self.board_height):
             for tile_x in range(self.board_width):
                 left, top = self.get_left_top(tile_x, tile_y)
-                tile_rect = pg.Rect(left, top, TILE_SIZE, TILE_SIZE)
+                tile_rect = pg.Rect(left, top, self.tile_size, self.tile_size)
                 if tile_rect.collidepoint(x, y):
                     return tile_x, tile_y
         return None, None
 
     # function gets left and top position of tile
     def get_left_top(self, x: int, y: int) -> tuple[int, int]:
-        left = self.x_margin + (x * TILE_SIZE) + (x - 1)
-        top = self.y_margin + (y * TILE_SIZE) + (y - 1)
+        left = self.x_margin + (x * self.tile_size) + (x - 1)
+        top = self.y_margin + (y * self.tile_size) + (y - 1)
         return left, top
 
     # function draws a tile at the given coordinates
     def draw_tile(self, x: int, y: int, num: int, adj_x: int = 0, adj_y: int = 0):
         left, top = self.get_left_top(x, y)
 
-        pg.draw.rect(self.display, TILE_COLOR, (left + adj_x, top + adj_y, TILE_SIZE, TILE_SIZE))
-        text_surf = self.basic_font.render(str(num), True, TEXT_COLOR)
+        pg.draw.rect(self.display, TILE_COLOR, (left + adj_x, top + adj_y, self.tile_size, self.tile_size))
+        text_surf = self.tile_font.render(str(num), True, TEXT_COLOR)
         text_rect = text_surf.get_rect()
-        text_rect.center = left + TILE_SIZE // 2 + adj_x, top + TILE_SIZE // 2 + adj_y
+        text_rect.center = left + self.tile_size // 2 + adj_x, top + self.tile_size // 2 + adj_y
         self.display.blit(text_surf, text_rect)
 
     def draw_message(self, msg: str):
