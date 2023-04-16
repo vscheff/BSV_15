@@ -121,7 +121,7 @@ class GraphicsEngine:
             pg.display.flip()
             self.fps_clock.tick(FPS)
 
-    def event_handler(self) -> int | None:
+    def event_handler(self):
         slide_to = None
 
         for event in pg.event.get():  # event handling loop
@@ -132,7 +132,8 @@ class GraphicsEngine:
                 spot_x, spot_y = self.get_spot_clicked(event.pos[0], event.pos[1])
 
                 if (spot_x, spot_y) == (None, None):  # check if user clicked an option button
-                    if self.solve_rect.collidepoint(event.pos) and self.THREAD_solve is None:
+                    if self.solve_rect.collidepoint(event.pos) and self.THREAD_solve is None \
+                                                               and not self.puzzle.is_solution():
                         self.THREAD_solve = ThreadWithReturn(target=solve_puzzle, args=(self.puzzle,))
                         self.THREAD_solve.start()
                         self.draw_message(MSG_SEARCHING)
@@ -220,7 +221,7 @@ class GraphicsEngine:
                     self.draw_tile(x, y, board[y][x])
 
     # function finds x and y board coordinates from x and y pixel coordinates
-    def get_spot_clicked(self, x: int, y: int) -> tuple[int | None, int | None]:
+    def get_spot_clicked(self, x: int, y: int):
         for tile_y in range(self.board_height):
             for tile_x in range(self.board_width):
                 left, top = self.get_left_top(tile_x, tile_y)
