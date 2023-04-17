@@ -12,13 +12,11 @@ RIGHT = 4
 
 
 class Puzzle:
-    def __init__(self, board: list = None, size: int = 4, parent: Puzzle = None, depth: int = 0):
+    def __init__(self, board: list = None, size: int = 4, parent: Puzzle = None):
         self.parent = parent
         self.cost = -1
         self.blank_pos = (-1, -1)
         self.inversions = -1
-        self.bad_tiles = -1
-        self.depth = depth
 
         if board is None:
             self.board_size = size
@@ -31,23 +29,19 @@ class Puzzle:
         return '\n'.join(["".join([f"{str(i):<3}" for i in row]) for row in self.board])
 
     def __lt__(self, other: Puzzle) -> bool:
-        if self.cost != other.cost:
-            return self.cost < other.cost
-        if self.depth != other.depth:
-            return self.depth < other.depth
-        return self.inversions < other.inversions
+
+        return self.cost < other.cost if self.cost != other.cost else self.inversions < other.inversions
 
     def set_board(self, board: list):
         self.board = board
         self.board_size = len(self.board)
-        self.bad_tiles = self.count_bad_tiles()
-        self.cost = self.bad_tiles + self.depth
+        self.cost = self.count_bad_tiles()
         self.blank_pos = self.find_blank_pos()
         self.inversions = self.count_inversions()
 
     # Checks if the current board is the solution board
     def is_solution(self) -> bool:
-        return self.bad_tiles == 0
+        return self.cost == 0
 
     # check if a 15 puzzle is solvable or not
     def is_solvable(self) -> bool:
@@ -78,9 +72,7 @@ class Puzzle:
         if not self.is_solvable():
             self.generate()
         else:
-            self.bad_tiles = self.cost = self.count_bad_tiles()
             self.cost = self.count_bad_tiles()
-            self.depth = 0
 
     def is_valid_move(self, move: int) -> bool:
         i, j = self.blank_pos
@@ -173,7 +165,7 @@ def solve_puzzle(puzzle: Puzzle) -> Puzzle | None:
         for direction in UP, DOWN, LEFT, RIGHT:
             new_board = current_node.move(direction)
             if new_board and str(new_board) not in checked_boards:
-                live_nodes.insert(Puzzle(new_board, puzzle.board_size, current_node, current_node.depth + 1))
+                live_nodes.insert(Puzzle(new_board, puzzle.board_size, current_node))
                 checked_boards[str(new_board)] = True
 
     print("\nNo solution found! Are you sure the puzzle was solvable?")
