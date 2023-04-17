@@ -15,7 +15,7 @@ This is a simple implementation of the Branch and Bound algorithm for solving th
 * [matplotlib](https://matplotlib.org/)
 * [pandas](https://pandas.pydata.org/)
 * [tqdm](https://tqdm.github.io/)
-* [__future__](https://docs.python.org/3/library/__future__.html)
+* [\_\_future__](https://docs.python.org/3/library/__future__.html)
 * [random](https://docs.python.org/3/library/random.html)
 * [copy](https://docs.python.org/3/library/copy.html)
 
@@ -36,9 +36,9 @@ To run the program, run the following command:
 
 The program has the following options:
 
-* **1, Launch GUI**: Launches the GUI for an interactive Puzzle with the size of your choice.
-* **2, Plotting**: Launches the plotting of the results of the experiments. The results are stored in the folder `dataframes`. The plots are stored in the folder `plots`.
-* **3, Import a test puzzle**: Imports a test puzzle from the `test-boards` folder. The puzzles are stored in the `txt` format.
+* **1. Launch GUI**: Launches the GUI for an interactive Puzzle with the size of your choice.
+* **2. Plot Timing Data**: Launches the plotting of the results of the experiments. The results are stored as `.csv` files in the folder `dataframes`. The plots are stored in the folder `plots`.
+* **3. Import Test Puzzle**: Imports a test puzzle from the `test_boards` folder. The puzzles are stored as a grid of whitespace separated integers in `.txt` files.
 
 ## Authors
 

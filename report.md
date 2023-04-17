@@ -45,7 +45,7 @@ Below is a graph containing a comparison of our group's times for solving puzzle
 The x-axis has the grid width plotted linearly, and the y-axis has the time-required to solve in nanoseconds plotted logarithmically. 
 The graph contains points for each individual test run, as well as a line plotting the mean time for each size.
 
-![all.png](plots%2Fall.png)
+![all.png](plots/all.png)
 
 When analyzing the graph, incrementing the grid width drastically increases the time it takes to solve the puzzle. 
 This is clear when looking at the algorithm to solve a puzzle and the time complexity.  
@@ -55,8 +55,7 @@ Looking at the time complexity, it is easy to see how increasing n drastically i
 ***
 ## Installation
 
-
-check out the [README.md](README.md)
+Reference the [README.md](README.md)
 
 ***
 ## Authors 

@@ -15,7 +15,7 @@ from src.puzzle import *
 from src.thread import ThreadWithReturn
 
 # create constants
-FPS = 30
+FPS = 60
 WINDOW_WIDTH = 1600
 WINDOW_HEIGHT = 900
 BASIC_FONT_SIZE = 20
