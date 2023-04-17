@@ -1,11 +1,12 @@
 from threading import Thread
+from typing import Callable
 
 # Local Dependencies
 from src.puzzle import Puzzle
 
 
 class ThreadWithReturn(Thread):
-    def __init__(self, target=None, args=(), kwargs=None):
+    def __init__(self, target: Callable = None, args: tuple = (), kwargs: dict = None):
         Thread.__init__(self, None, target, None, args, kwargs)
         self.ret = None
 

@@ -12,6 +12,7 @@ from pygame.locals import *
 # Local Dependencies
 from src.puzzle import *
 from src.thread import ThreadWithReturn
+from src.button import Button
 
 # create constants
 FPS = 30
@@ -23,6 +24,8 @@ TILE_FONT_RATIO = 4
 TILE_SLIDE_RATIO = 10
 BORDER_WIDTH = 4
 GAME_FONT = "freesansbold.ttf"
+BUTTON_SIZE = (150, 75)
+BUTTON_SPACING = 25
 
 # In-Game Messages
 MSG_INSTRUCTIONS = "Click tiles next to empty space or press arrow keys to slide tiles."
@@ -72,11 +75,13 @@ class GraphicsEngine:
         self.basic_font = pg.font.Font(GAME_FONT, BASIC_FONT_SIZE)
         self.fps_clock = pg.time.Clock()
         self.puzzle = puzzle
+        self.initial_board = puzzle.board
         self.top_message = None
         self.THREAD_solve = None
         self.move_counter = None
         self.total_moves = 0
         self.solve_rect = None
+        self.buttons = []
 
         self.initialize_display()
 
@@ -87,11 +92,50 @@ class GraphicsEngine:
         self.draw_message(MSG_INSTRUCTIONS)
         self.draw_move_count()
         self.draw_board(self.puzzle.board)
-        solve_surface, solve_rect = \
-            self.make_text("Solve", TEXT_COLOR, TILE_COLOR, WINDOW_WIDTH - 120, WINDOW_HEIGHT - 30)
-        self.display.blit(solve_surface, solve_rect)
 
-        self.solve_rect = solve_rect
+        self.draw_buttons()
+
+    def draw_buttons(self):
+        button_names = ("Solve", "Reset", "New Board")
+        button_funcs = (self.find_solution, self.reset_puzzle, self.new_puzzle)
+
+        left_edge = WINDOW_WIDTH - (self.x_margin + BUTTON_SIZE[0]) // 2
+        top_edge = self.y_margin
+
+        for name, func in zip(button_names, button_funcs):
+            button = Button(pg.Rect(left_edge, top_edge, *BUTTON_SIZE), BUTTON_COLOR, name, func)
+            self.display.fill(button.color, button.rect)
+            pg.display.update(button.rect)
+            
+            text = self.basic_font.render(button.text, True, BUTTON_TEXT_COLOR)
+            rect = text.get_rect(center=button.rect.center)
+            self.display.blit(text, rect)
+            self.buttons.append(button)
+            
+            top_edge += BUTTON_SPACING + BUTTON_SIZE[1]
+
+    def find_solution(self):
+        if self.THREAD_solve is not None or self.puzzle.is_solution():
+            return
+
+        self.THREAD_solve = ThreadWithReturn(target=solve_puzzle, args=(self.puzzle,))
+        self.THREAD_solve.start()
+        self.draw_message(MSG_SEARCHING)
+
+    def reset_puzzle(self):
+        self.puzzle.set_board(self.initial_board)
+        self.draw_board(self.puzzle.board)
+        self.total_moves = 0
+        self.draw_move_count()
+        self.draw_message(MSG_INSTRUCTIONS)
+
+    def new_puzzle(self):
+        self.puzzle.generate()
+        self.initial_board = self.puzzle.board
+        self.draw_board(self.puzzle.board)
+        self.total_moves = 0
+        self.draw_move_count()
+        self.draw_message(MSG_INSTRUCTIONS)
 
     # creates gui where puzzle is a Puzzle class variable
     def launch_gui(self):
@@ -121,7 +165,7 @@ class GraphicsEngine:
             pg.display.flip()
             self.fps_clock.tick(FPS)
 
-    def event_handler(self):
+    def event_handler(self) -> int | None:
         slide_to = None
 
         for event in pg.event.get():  # event handling loop
@@ -129,17 +173,13 @@ class GraphicsEngine:
                 terminate()
             # if user clicked in the window, get cords of spot clicked
             elif event.type == MOUSEBUTTONUP:  # if user used mouse
-                spot_x, spot_y = self.get_spot_clicked(event.pos[0], event.pos[1])
-
-                if (spot_x, spot_y) == (None, None):  # check if user clicked an option button
-                    if self.solve_rect.collidepoint(event.pos) and self.THREAD_solve is None \
-                                                               and not self.puzzle.is_solution():
-                        self.THREAD_solve = ThreadWithReturn(target=solve_puzzle, args=(self.puzzle,))
-                        self.THREAD_solve.start()
-                        self.draw_message(MSG_SEARCHING)
-
+                for button in self.buttons:
+                    if button.rect.collidepoint(*event.pos):
+                        button.press()
+                        break
                 else:  # user clicked on a tile
                     # check if the clicked tile was next to blank spot
+                    spot_x, spot_y = self.get_spot_clicked(event.pos[0], event.pos[1])
                     blank_y, blank_x = self.puzzle.blank_pos
                     if spot_x == blank_x + 1 and spot_y == blank_y:
                         slide_to = LEFT
@@ -212,7 +252,7 @@ class GraphicsEngine:
         border_offset = 2 * BORDER_WIDTH + self.board_width - 1
         border_rect = (left - BORDER_WIDTH - 1, top - BORDER_WIDTH - 1, width + border_offset, height + border_offset)
 
-        pg.draw.rect(self.display, BG_COLOR, (left, top, width + self.board_width, height + self.board_height))
+        pg.draw.rect(self.display, BG_COLOR, (left-1, top-1, width + self.board_width, height + self.board_height))
         pg.draw.rect(self.display, BORDER_COLOR, border_rect, BORDER_WIDTH)
 
         for x in range(self.board_height):
@@ -221,14 +261,13 @@ class GraphicsEngine:
                     self.draw_tile(x, y, board[y][x])
 
     # function finds x and y board coordinates from x and y pixel coordinates
-    def get_spot_clicked(self, x: int, y: int):
+    def get_spot_clicked(self, x: int, y: int) -> tuple[int | int]:
         for tile_y in range(self.board_height):
             for tile_x in range(self.board_width):
                 left, top = self.get_left_top(tile_x, tile_y)
                 tile_rect = pg.Rect(left, top, self.tile_size, self.tile_size)
                 if tile_rect.collidepoint(x, y):
                     return tile_x, tile_y
-        return None, None
 
     # function gets left and top position of tile
     def get_left_top(self, x: int, y: int) -> tuple[int, int]:
