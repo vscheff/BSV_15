@@ -16,12 +16,11 @@ from src.thread import ThreadWithReturn
 
 # create constants
 FPS = 30
-BLANK = None
 WINDOW_WIDTH = 1600
 WINDOW_HEIGHT = 900
 BASIC_FONT_SIZE = 20
 TILE_FONT_RATIO = 4
-TILE_SLIDE_RATIO = 10
+TILE_SPEED_RATIO = 10
 BORDER_WIDTH = 4
 GAME_FONT = "freesansbold.ttf"
 BUTTON_SIZE = (150, 75)
@@ -68,7 +67,7 @@ class GraphicsEngine:
         self.safe_height = WINDOW_HEIGHT - 75
         self.safe_width = WINDOW_WIDTH - 150
         self.tile_size = (min(self.safe_width, self.safe_height) - self.board_width + 1) // self.board_width
-        self.tile_slide_speed = self.tile_size // TILE_SLIDE_RATIO
+        self.tile_slide_speed = self.tile_size // TILE_SPEED_RATIO
         self.x_margin = (WINDOW_WIDTH - self.tile_size * self.board_width) // 2
         self.y_margin = (WINDOW_HEIGHT - self.tile_size * self.board_height) // 2
         self.tile_font = pg.font.Font(GAME_FONT, self.tile_size // TILE_FONT_RATIO)
