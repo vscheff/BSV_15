@@ -12,5 +12,3 @@ class Button:
 
     def press(self):
         self.func(*self.args, **self.kwargs)
-
-

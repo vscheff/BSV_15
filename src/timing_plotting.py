@@ -77,6 +77,8 @@ class Plotting:
         self.dataframes[INPUT_DF]["mean"].to_csv(DATAFRAME + self.user + '_mean.csv', index=False)
 
     def read_csv(self):
+        users_not_found = []
+
         # read all csv files and save them to dataframes
         for user in self.users:
             try:
@@ -84,8 +86,11 @@ class Plotting:
                 self.dataframes[user]["mean"] = pd.read_csv(f"{DATAFRAME}{user}_mean.csv")
             except FileNotFoundError:
                 print(f"\nERROR: No experimental data found for {user}.")
-                self.dataframes.pop(user)
-                self.users.remove(user)
+                users_not_found.append(user)
+
+        for user in users_not_found:
+            self.dataframes.pop(user)
+            self.users.remove(user)
 
     def plot_all_data(self, debug: bool) -> str:
         figure = plt.figure(figsize=(20, 10))

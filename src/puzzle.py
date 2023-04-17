@@ -1,6 +1,6 @@
 from __future__ import annotations
-from random import shuffle
 from copy import deepcopy
+from random import shuffle
 
 # Local Dependencies
 from src.minheap import MinHeap
@@ -57,14 +57,6 @@ class Puzzle:
         
         return False
 
-    def is_valid_move(self, move: int) -> bool:
-        i, j = self.blank_pos
-        
-        return (move == UP and i < self.board_size - 1) or \
-               (move == DOWN and i > 0) or \
-               (move == LEFT and j < self.board_size - 1) or \
-               (move == RIGHT and j > 0) 
-
     def generate(self):
         sequence = list(range(self.board_size ** 2))
         shuffle(sequence)
@@ -80,6 +72,14 @@ class Puzzle:
             self.generate()
         else:
             self.cost = self.count_bad_tiles()
+
+    def is_valid_move(self, move: int) -> bool:
+        i, j = self.blank_pos
+
+        return (move == UP and i < self.board_size - 1) or \
+               (move == DOWN and i > 0) or \
+               (move == LEFT and j < self.board_size - 1) or \
+               (move == RIGHT and j > 0)
 
     def move(self, direction: int) -> list[list[int]] | None:
         i, j = self.blank_pos
@@ -111,7 +111,7 @@ class Puzzle:
                 new_board[i][j] = new_board[i][j + 1]
                 new_board[i][j + 1] = 0
                 return new_board
-        
+
         return None
 
     def count_bad_tiles(self) -> int:

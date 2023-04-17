@@ -13,7 +13,7 @@ def main():
     prompt_choice = get_int_from_user("1. Launch GUI\n2. Plot Timing Data\n3. Import Test Puzzle", 1, 3)
 
     if prompt_choice == 1:
-        engine = GraphicsEngine(Puzzle(size=get_int_from_user("\nEnter desired grid width: ", 1)))
+        engine = GraphicsEngine(Puzzle(size=get_int_from_user("Enter desired grid width: ", 1)))
         engine.launch_gui()
 
     elif prompt_choice == 2:
@@ -28,7 +28,7 @@ def main():
     elif prompt_choice == 3:
         input_board = get_board_from_file()
         puzzle = Puzzle(board=input_board)
-        num_tests = get_int_from_user("\nEnter desired number of tests: ", 1)
+        num_tests = get_int_from_user("Enter desired number of tests: ", 1)
         total_time = 0
 
         for _ in range(num_tests):

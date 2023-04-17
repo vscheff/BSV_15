@@ -10,9 +10,9 @@ import pygame as pg
 from pygame.locals import *
 
 # Local Dependencies
+from src.button import Button
 from src.puzzle import *
 from src.thread import ThreadWithReturn
-from src.button import Button
 
 # create constants
 FPS = 30
@@ -123,6 +123,7 @@ class GraphicsEngine:
         self.draw_message(MSG_SEARCHING)
 
     def reset_puzzle(self):
+        self.THREAD_solve = None
         self.puzzle.set_board(self.initial_board)
         self.draw_board(self.puzzle.board)
         self.total_moves = 0
@@ -130,6 +131,7 @@ class GraphicsEngine:
         self.draw_message(MSG_INSTRUCTIONS)
 
     def new_puzzle(self):
+        self.THREAD_solve = None
         self.puzzle.generate()
         self.initial_board = self.puzzle.board
         self.draw_board(self.puzzle.board)
@@ -261,7 +263,7 @@ class GraphicsEngine:
                     self.draw_tile(x, y, board[y][x])
 
     # function finds x and y board coordinates from x and y pixel coordinates
-    def get_spot_clicked(self, x: int, y: int) -> tuple[int | int]:
+    def get_spot_clicked(self, x: int, y: int) -> tuple[int, int]:
         for tile_y in range(self.board_height):
             for tile_x in range(self.board_width):
                 left, top = self.get_left_top(tile_x, tile_y)
