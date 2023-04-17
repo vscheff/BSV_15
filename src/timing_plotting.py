@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+from random import seed
 import pandas as pd
 from time import perf_counter_ns
 from tqdm import tqdm
@@ -154,9 +155,12 @@ class Plotting:
             plt.show()
 
     def get_experimental_data(self, debug: bool):
+        input_seed = get_int_from_user("Enter a seed: ")
         min_val = get_int_from_user("Enter minimum grid width: ", 1)
         max_val = get_int_from_user("Enter maximum grid width: ", min_val)
         num_tests = get_int_from_user("Enter desired number of tests: ", 1)
+
+        seed(input_seed)
 
         for n in tqdm(range(min_val, max_val + 1), desc="Computing", unit="size", colour="CYAN", mininterval=0):
             puzzle = Puzzle(size=n)
