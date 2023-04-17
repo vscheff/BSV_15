@@ -180,7 +180,9 @@ class GraphicsEngine:
                         break
                 else:  # user clicked on a tile
                     # check if the clicked tile was next to blank spot
-                    spot_x, spot_y = self.get_spot_clicked(event.pos[0], event.pos[1])
+                    if not (spot_clicked := self.get_spot_clicked(event.pos[0], event.pos[1])):
+                        continue
+                    spot_x, spot_y = spot_clicked
                     blank_y, blank_x = self.puzzle.blank_pos
                     if spot_x == blank_x + 1 and spot_y == blank_y:
                         slide_to = LEFT
