@@ -78,7 +78,9 @@ class Puzzle:
         if not self.is_solvable():
             self.generate()
         else:
+            self.bad_tiles = self.cost = self.count_bad_tiles()
             self.cost = self.count_bad_tiles()
+            self.depth = 0
 
     def is_valid_move(self, move: int) -> bool:
         i, j = self.blank_pos
