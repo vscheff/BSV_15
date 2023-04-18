@@ -6,18 +6,17 @@ Branch and Bound algorithm for solving the 15-Puzzle
 
 This is a simple implementation of the Branch and Bound algorithm for solving the 15-Puzzle. The algorithm is implemented in Python and uses the following libraries:
 
-* [Pygame](https://www.pygame.org/news)
-* [time](https://docs.python.org/3/library/time.html)
-* [os](https://docs.python.org/3/library/os.html)
-* [sys](https://docs.python.org/3/library/sys.html)
-* [thread](https://docs.python.org/3/library/threading.html)
-* [threading](https://docs.python.org/3/library/threading.html)
+* [copy](https://docs.python.org/3/library/copy.html)
 * [matplotlib](https://matplotlib.org/)
+* [os](https://docs.python.org/3/library/os.html)
 * [pandas](https://pandas.pydata.org/)
+* [Pygame](https://www.pygame.org/news)
+* [random](https://docs.python.org/3/library/random.html)
+* [sys](https://docs.python.org/3/library/sys.html)
+* [threading](https://docs.python.org/3/library/threading.html)
+* [time](https://docs.python.org/3/library/time.html)
 * [tqdm](https://tqdm.github.io/)
 * [\_\_future__](https://docs.python.org/3/library/__future__.html)
-* [random](https://docs.python.org/3/library/random.html)
-* [copy](https://docs.python.org/3/library/copy.html)
 
 ## Installation
 
@@ -28,7 +27,7 @@ To install the required libraries, run the following command:
 
 ## Usage
 
-To run the program, run the following command:
+To run the program, run the following command from the program's root directory:
 
     python3 main.py
 
@@ -36,9 +35,12 @@ To run the program, run the following command:
 
 The program has the following options:
 
-* **1. Launch GUI**: Launches the GUI for an interactive Puzzle with the size of your choice.
-* **2. Plot Timing Data**: Launches the plotting of the results of the experiments. The results are stored as `.csv` files in the folder `dataframes`. The plots are stored in the folder `plots`.
-* **3. Import Test Puzzle**: Imports a test puzzle from the `test_boards` folder. The puzzles are stored as a grid of whitespace separated integers in `.txt` files.
+* **1. Launch GUI**: Launches the GUI, allowing user to interact with the puzzle and solver.
+* **2. Plot Timing Data**: Gathers and plots experimental timing data for the solver. 
+       The results are stored as `.csv` files in the `dataframes` directory. 
+       The plots are stored in the `plots` directory.
+* **3. Import Test Puzzle**: Imports a test puzzle from the `test_boards` directory. 
+       The puzzles are stored as a grid of whitespace separated integers in `.txt` files.
 
 ## Authors
 
