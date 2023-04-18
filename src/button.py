@@ -38,7 +38,7 @@ class TextBox(Button):
 
     # Handles key presses when the text box is active
     #  param key_event - KEYUP event
-    # return      True - if button needs to be redraw
+    # return      True - if button needs to be redrawn
     # return     False - if button does not need to be redrawn
     def handle_key(self, key_event: event) -> bool:
         if key_event.key == K_BACKSPACE:
