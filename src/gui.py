@@ -11,7 +11,7 @@ import pygame as pg
 from pygame.locals import *
 
 # Local Dependencies
-from src.button import Button
+from src.button import Button, TextBox
 from src.puzzle import *
 from src.thread import ThreadWithReturn
 
@@ -27,10 +27,13 @@ TILE_FONT_RATIO = 4                 # Font used on tiles will be this many times
 TILE_SPEED_RATIO = 10               # Speed the tile will move at when animated (smaller numbers = faster slide)
 BORDER_WIDTH = 4                    # Width of the border surrounding the game board
 BUTTON_SIZE = (150, 75)             # Size of the in-game menu buttons [pixels]
+TEXTBOX_SIZE = (125, 50)            # Size of the in-game text boxes [pixels]
 BUTTON_SPACING = 25                 # Space between the in-game menu buttons [pixels]
 TOP_MESSAGE_OFFSET = (5, 5)         # Offset between the top message and the top-left corner of the screen [pixels]
 TOTAL_MOVES_OFFSET = (5, 30)        # Offset between moves counter and the top-left corner of the screen [pixels]
-
+INITIAL_GRID_SIZE = 4               # Grid size to use for puzzle when the game first starts
+MIN_GRID_SIZE = 1                   # Minimum grid size allowed for puzzles
+MAX_GRID_SIZE = 64                  # Maximum grid size allowed for puzzles
 
 # In-Game Messages
 MSG_INSTRUCTIONS = "Click tiles next to empty space or press arrow keys to slide tiles."
@@ -53,6 +56,7 @@ TEXT_COLOR = COLORS["white"]            # Color of in-game text
 BORDER_COLOR = COLORS["black"]          # Color of the border surrounding the game board
 BUTTON_COLOR = COLORS["white"]          # Color of the menu buttons
 BUTTON_TEXT_COLOR = COLORS["black"]     # Color of the menu button text
+ACTIVE_TEXTBOX_COLOR = COLORS["gold"]   # Color of active text boxes
 
 # Mapping of key-press to expected direction of tile movement
 KEY_MAP = {
@@ -66,6 +70,8 @@ KEY_MAP = {
 # Holds all attributes and methods needed to run the GUI
 # attr          display - Surface object of the entire screen
 # attr        fps_clock - Clock object used to help game run at desired FPS
+# attr           puzzle - Puzzle object used to hold the the puzzle information
+# attr    initial_board - 2D array representing the initial state of the game board before any input movements
 # attr       board_size - length/width of the game board
 # attr        tile_size - size of the sliding game tiles
 # attr tile_slide_speed - number of pixels the tiles will slide each frame when animating their movement
@@ -73,37 +79,36 @@ KEY_MAP = {
 # attr         y_margin - space between the top/bottom of the screen and the game board in pixels
 # attr        tile_font - Font object used to render the font on top of the sliding tiles
 # attr       basic_font - Font object used to render text not on the tiles
-# attr           puzzle - Puzzle object used to hold the the puzzle information
-# attr    initial_board - 2D array representing the initial state of the game board before any input movements
 # attr      top_message - Rect object that is the size of the currently displayed message at the top of the screen
 # attr     move_counter - Rect object that is the size of the "number of moves" counter
 # attr      total_moves - number of moves used since the initial board state
 # attr     THREAD_solve - Thread object used to solve the puzzle concurrently
 # attr          buttons - array of Button objects representing the in-game menu buttons
 class GraphicsEngine:
-
-    # param puzzle - Puzzle object holding the initial board state
-    def __init__(self, puzzle: Puzzle):
+    def __init__(self):
         pg.init()
 
         self.display = pg.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
         self.fps_clock = pg.time.Clock()
-        self.board_size = puzzle.board_size
+        self.puzzle = Puzzle(size=INITIAL_GRID_SIZE)
+        self.initial_board = self.puzzle.board
+        self.board_size = self.puzzle.board_size
         self.tile_size = (min(WINDOW_WIDTH - 150, WINDOW_HEIGHT - 75) - self.board_size + 1) // self.board_size
         self.tile_slide_speed = self.tile_size // TILE_SPEED_RATIO
         self.x_margin = (WINDOW_WIDTH - self.tile_size * self.board_size) // 2
         self.y_margin = (WINDOW_HEIGHT - self.tile_size * self.board_size) // 2
         self.tile_font = pg.font.Font(GAME_FONT, self.tile_size // TILE_FONT_RATIO)
         self.basic_font = pg.font.Font(GAME_FONT, BASIC_FONT_SIZE)
-        self.puzzle = puzzle
-        self.initial_board = puzzle.board
         self.top_message = None
         self.move_counter = None
         self.total_moves = 0
         self.THREAD_solve = None
         self.buttons = []
+        self.active_text_box = None
+        self.next_board_size = None
 
         self.initialize_display()
+        self.draw_board(self.puzzle.board)
 
     # Prepares the screen and draws the board in preparation for the call to self.launch_gui()
     def initialize_display(self):
@@ -114,11 +119,10 @@ class GraphicsEngine:
         self.display.fill(BG_COLOR)
         self.draw_message(MSG_INSTRUCTIONS)
         self.draw_move_count()
-        self.draw_board(self.puzzle.board)
-        self.draw_buttons()
+        self.draw_menu()
 
-    # Draws the in-game menu buttons onto the screen
-    def draw_buttons(self):
+    # Draws the in-game menu onto the screen
+    def draw_menu(self):
         button_names = ("Solve", "Reset", "New Board")
         button_funcs = (self.find_solution, self.reset_puzzle, self.new_puzzle)
 
@@ -127,16 +131,36 @@ class GraphicsEngine:
 
         # Create and draw a Button object for each menu button
         for name, func in zip(button_names, button_funcs):
-            button = Button(pg.Rect(left_edge, top_edge, *BUTTON_SIZE), BUTTON_COLOR, name, func)
-            self.display.fill(button.color, button.rect)
-            pg.display.update(button.rect)
-            
-            text = self.basic_font.render(button.text, True, BUTTON_TEXT_COLOR)
-            self.display.blit(text, text.get_rect(center=button.rect.center))
-
-            self.buttons.append(button)
+            self.draw_button(Button(pg.Rect(left_edge, top_edge, *BUTTON_SIZE), BUTTON_COLOR, name, func))
             
             top_edge += BUTTON_SPACING + BUTTON_SIZE[1]
+
+        # Draw label for the Board Size text box
+        rect = pg.Rect(left_edge, top_edge, *BUTTON_SIZE)
+        text = self.basic_font.render("Board Size", True, TEXT_COLOR)
+        self.display.blit(text, text.get_rect(topleft=rect.topleft))
+
+        top_edge += BUTTON_SPACING
+
+        # Draw the Board Size text box
+        rect = pg.Rect(left_edge, top_edge, *TEXTBOX_SIZE)
+        text_box = TextBox(rect, ACTIVE_TEXTBOX_COLOR, BUTTON_COLOR, str(self.board_size), self.set_active_text_box)
+        text_box.args = (text_box,)
+        self.draw_button(text_box)
+
+        # Flip screen here to prevent blank buttons while generating large puzzles
+        pg.display.flip()
+
+    # Draws a given button to the screen
+    # param button - Button object to be drawn
+    def draw_button(self, button: Button):
+        self.display.fill(button.color, button.rect)
+        pg.display.update(button.rect)
+
+        text = self.basic_font.render(button.text, True, BUTTON_TEXT_COLOR)
+        self.display.blit(text, text.get_rect(center=button.rect.center))
+
+        self.buttons.append(button)
 
     # Called by the "Solve" button. Starts a new thread to solve the puzzle
     def find_solution(self):
@@ -158,13 +182,44 @@ class GraphicsEngine:
 
     # Called by the "New Board" button. Generates and draws a new puzzle
     def new_puzzle(self):
+        if self.next_board_size is not None and self.board_size != self.next_board_size:
+            self.board_size = self.next_board_size
+            self.next_board_size = None
+            self.tile_size = (min(WINDOW_WIDTH - 150, WINDOW_HEIGHT - 75) - self.board_size + 1) // self.board_size
+            self.tile_font = pg.font.Font(GAME_FONT, self.tile_size // TILE_FONT_RATIO)
+            self.tile_slide_speed = self.tile_size // TILE_SPEED_RATIO
+            self.initialize_display()
+
         self.THREAD_solve = None
-        self.puzzle.generate()
+        self.puzzle.generate(self.board_size)
         self.initial_board = self.puzzle.board
         self.draw_board(self.puzzle.board)
         self.total_moves = 0
         self.draw_move_count()
         self.draw_message(MSG_INSTRUCTIONS)
+
+    def set_active_text_box(self, text_box: TextBox):
+        text_box.is_active = True
+        self.active_text_box = text_box
+
+        self.display.fill(text_box.active_color, text_box.rect)
+        pg.display.update(text_box.rect)
+
+        text = self.basic_font.render(text_box.text, True, BUTTON_TEXT_COLOR)
+        self.display.blit(text, text.get_rect(center=text_box.rect.center))
+
+    def reset_active_text_box(self):
+        text_box = self.active_text_box
+        self.active_text_box = None
+        self.next_board_size = min(MAX_GRID_SIZE, max(MIN_GRID_SIZE, int(text_box.text)))
+        if self.next_board_size != int(text_box.text):
+            text_box.text = str(self.next_board_size)
+
+        self.display.fill(text_box.color, text_box.rect)
+        pg.display.update(text_box.rect)
+
+        text = self.basic_font.render(text_box.text, True, BUTTON_TEXT_COLOR)
+        self.display.blit(text, text.get_rect(center=text_box.rect.center))
 
     # Main execution loop of the GUI
     def launch_gui(self):
@@ -205,7 +260,10 @@ class GraphicsEngine:
             if event.type == QUIT:
                 terminate()
 
+            # User clicked on the screen
             elif event.type == MOUSEBUTTONUP:
+                if self.active_text_box is not None:
+                    self.reset_active_text_box()
                 # Check if the user clicked any of the in-game menu buttons
                 for button in self.buttons:
                     if button.rect.collidepoint(*event.pos):
@@ -231,12 +289,22 @@ class GraphicsEngine:
                         if spot_y == blank_y - 1:
                             slide_to = DOWN
 
-            # Else terminate the program if the user pressed Esc
+            # User pressed a keyboard button
             elif event.type == KEYUP:
                 if event.key == K_ESCAPE:
                     terminate()
 
-                slide_to = KEY_MAP.get(event.key)
+                # If no text box is active, get the slide_to direction for the keypress
+                if self.active_text_box is None:
+                    slide_to = KEY_MAP.get(event.key)
+                    continue
+
+                if event.key == K_RETURN:
+                    self.reset_active_text_box()
+
+                # Let active text box handle the event, and redraw the text box if necessary
+                elif self.active_text_box.handle_key(event):
+                    self.set_active_text_box(self.active_text_box)
 
         return slide_to
 

@@ -15,7 +15,7 @@ def main():
 
     # Launch GUI
     if prompt_choice == 1:
-        engine = GraphicsEngine(Puzzle(size=get_int_from_user("Enter desired grid width", 1)))
+        engine = GraphicsEngine()
         engine.launch_gui()
 
     # Plot Timing Data
