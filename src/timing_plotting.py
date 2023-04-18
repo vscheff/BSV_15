@@ -8,24 +8,21 @@ from tqdm import tqdm
 from src.input_handler import get_int_from_user
 from src.puzzle import Puzzle, solve_puzzle
 
-# Constant file paths
-DATAFRAMES = "./dataframes/"
-PLOTS = "./plots/"
+# Constants
+DATAFRAMES = "./dataframes/"            # Directory for importing/exporting .csv files
+PLOTS = "./plots/"                      # Directory for exported plots
+POWER_USERS = ("bdub", "sam", "von")    # Usernames for users who's data is expected to be present in repo
+CHART_SIZE = (20, 10)                   # Dimensions of the exported plots [inches]
+CHART_DPI = 300                         # DPI of exported plots
+MEAN_SYM = "--"                         # Symbol used for plotting mean times
+ALL_SYM = 'x'                           # Symbol used for plotting individual times
 
-# Usernames for users who's data is expected to be present in repo
-POWER_USERS = ("bdub", "sam", "von")
-
-# Chart constants
-MEAN_SYM = "--"
-ALL_SYM = 'x'
+# Chart labels
 X_AXIS = "Puzzle size [n]"
 Y_AXIS = "Time [ns]"
-CHART_TITLE = "n-Puzzle Solver Algorithm Analysis\n" \
-              "Grid Size vs Time Required"
-CHART_SIZE = (20, 10)
-CHART_DPI = 300
+CHART_TITLE = "n-Puzzle Solver Algorithm Analysis\nGrid Size vs Time Required"
 
-# Color mapping
+# Color mapping (hex color codes)
 colors = {
     "blue":         "#2471a3",
     "light_blue":   "#a9cce3",
@@ -42,8 +39,9 @@ colors = {
 # attr       user - username of the user executing the program
 # attr      users - list of power users and current user
 # attr dataframes - dictionary of dataframes for each user
+# attr      debug - enables debug mode when True
 class Plotting:
-    def __init__(self):
+    def __init__(self, debug: bool):
         # Force user to enter a non-empty string for their username
         self.user = ""
         while not self.user:
@@ -61,6 +59,8 @@ class Plotting:
             self.dataframes[self.user] = {"all":  pd.DataFrame(columns=['n', "time"]),
                                           "mean": pd.DataFrame(columns=['n', "time"])}
             self.users.append(self.user)
+
+        self.debug = debug
 
     # Add the timing data of an individual run to the input dataframe
     def add_numbers_to_dataframe(self, n: int, time: int):
@@ -85,71 +85,49 @@ class Plotting:
             self.dataframes.pop(user)
             self.users.remove(user)
 
-    def plot_all_data(self, debug: bool):
-        figure = get_figure()
-
-        keys = iter(colors.keys())
-        for user in self.users:
-            mean_n = self.dataframes[user]["mean"]['n'].to_numpy()
-            mean_time = self.dataframes[user]["mean"]["time"].to_numpy()
-            all_n = self.dataframes[user]["all"]['n'].to_numpy()
-            all_time = self.dataframes[user]["all"]["time"].to_numpy()
-
-            plt.plot(mean_n, mean_time, MEAN_SYM, color=colors[next(keys)], label=f"{user}_mean")
-            plt.plot(all_n, all_time, ALL_SYM, color=colors[next(keys)], label=f"{user}_all")
-
-        # add legend
-        plt.legend()
-
-        output_file_name = PLOTS + "all" + ".png"
-        figure.savefig(output_file_name, dpi=CHART_DPI)
-        print(f"\nCombined data plot exported to {output_file_name}")
-
-        if debug:
-            plt.show()
-
-    def plot_data(self, debug: bool):
-        # create a new figure
+    # Generates and exports plots for the dataframes
+    # param plot_all - indicates whether all data should be plotted, or just the current user's data
+    def plot_data(self, plot_all: bool = False):
         figure = plt.figure(figsize=CHART_SIZE)
 
-        # plot the data for mean times as a dashed line with color1 and label "Mean time"
-        mean_n = self.dataframes[self.user]["mean"]['n'].to_numpy()
-        mean_time = self.dataframes[self.user]["mean"]["time"].to_numpy()
-        plt.plot(mean_n, mean_time, MEAN_SYM, color=colors["blue"], label="Mean time")
+        if plot_all:
+            # Plot the dataframe for each user, iterating through the color dictionary for their plot colors
+            keys = iter(colors.keys())
+            for usr in self.users:
+                plot_df(self.dataframes[usr], colors[next(keys)], f"{usr}_mean", colors[next(keys)], f"{usr}_all")
+        else:
+            plot_df(self.dataframes[self.user], colors["blue"], "Mean time", colors["orange"], "All times")
 
-        # plot the data for all times as "x" with color2 and label "All times"
-        all_n = self.dataframes[self.user]["all"]['n'].to_numpy()
-        all_time = self.dataframes[self.user]["all"]["time"].to_numpy()
-        plt.plot(all_n, all_time, ALL_SYM, color=colors["orange"], label="All times")
-
-        # add labels and title to the plot
+        # Configure plot options
         plt.xlabel(X_AXIS)
         plt.yscale("log")
         plt.ylabel(Y_AXIS)
         plt.title(CHART_TITLE)
-
-        # add legend
         plt.legend()
 
-        # save the plot
-        output_file_name = PLOTS + self.user + ".png"
+        # Save the plot
+        output_file_name = f"{PLOTS}{'all' if plot_all else self.user}.png"
         figure.savefig(output_file_name, dpi=CHART_DPI)
-        print(f"\nIndividual data plot exported to {output_file_name}")
+        print(f"\n{'Combined' if plot_all else 'Individual'} data plot exported to {output_file_name}")
 
-        if debug:
-            # show the plot
+        if self.debug:
             plt.show()
 
-    def get_experimental_data(self, debug: bool):
-        seed(get_int_from_user("Enter a seed: "))
-        min_val = get_int_from_user("Enter minimum grid width: ", 1)
-        max_val = get_int_from_user("Enter maximum grid width: ", min_val)
-        num_tests = get_int_from_user("Enter desired number of tests: ", 1)
+    # Gathers timing data for a variable number of grid sizes and test runs
+    def get_experimental_data(self):
+        seed(input("Enter a seed:\n$ "))
+        min_val = get_int_from_user("Enter minimum grid width", 1)
+        max_val = get_int_from_user("Enter maximum grid width", min_val)
+        num_tests = get_int_from_user("Enter desired number of tests", 1)
 
+        puzzle = Puzzle(size=min_val)
+
+        # Loop for each grid size
         for n in tqdm(range(min_val, max_val + 1), desc="Computing", unit="size", colour="CYAN", mininterval=0):
-            puzzle = Puzzle(size=n)
+            # Loop for each test run, storing the timing data to a dataframe
             for _ in tqdm(range(num_tests), desc=f"{n ** 2 - 1:>2} Puzzle", unit="test", colour="CYAN", mininterval=0):
-                puzzle.generate()
+                puzzle.generate(n)
+
                 start_time = perf_counter_ns()
                 solve_puzzle(puzzle)
                 self.add_numbers_to_dataframe(n, perf_counter_ns() - start_time)
@@ -161,23 +139,31 @@ class Plotting:
         self.dataframes[self.user]["all"].to_csv(DATAFRAMES + self.user + '_all.csv', index=False)
         self.dataframes[self.user]["mean"].to_csv(DATAFRAMES + self.user + '_mean.csv', index=False)
 
-        if debug:
-            self.print_dataframe()
-
-    # DEBUG - TESTING
-    # ------------------------------------------------
-    def print_dataframe(self):
-        print(f"\n\n\t\tAll times: "
-              f"{self.dataframes[self.user]['all']}"
-              f"\n\t\tMean times: "
-              f"{self.dataframes[self.user]['mean']}")
+        if self.debug:
+            print_df(self.dataframes[self.user])
 
 
-def get_figure() -> plt.figure:
-    # create a new figure
-    figure = plt.figure(figsize=CHART_SIZE)
-    plt.xlabel(X_AXIS)
-    plt.yscale("log")
-    plt.ylabel(Y_AXIS)
-    plt.title(CHART_TITLE)
-    return figure
+# Prints a dataframe with nice formatting
+# param dataframe - dataframe to be printed
+def print_df(dataframe: pd.DataFrame):
+    print(f"\n\n\t\tAll times: "
+          f"{dataframe['all']}"
+          f"\n\t\tMean times: "
+          f"{dataframe['mean']}")
+
+# Plots a dataframe to the active figure
+# param  dataframe - dataframe to be plotted
+# param mean_color - color used to plot the mean time
+# param mean_label - label to use for the mean time
+# param  all_color - color used to plot the individual times
+#  aram  all_label - label to use for the individual times
+def plot_df(dataframe: pd.DataFrame, mean_color: str, mean_label: str, all_color: str, all_label: str):
+    # Plot the data for mean times with MEAN_SYM, mean_color, and mean_label
+    mean_n = dataframe["mean"]['n'].to_numpy()
+    mean_time = dataframe["mean"]["time"].to_numpy()
+    plt.plot(mean_n, mean_time, MEAN_SYM, color=mean_color, label=mean_label)
+
+    # Plot the data for all times with ALL_SYM, all_color, and all_label
+    all_n = dataframe["all"]['n'].to_numpy()
+    all_time = dataframe["all"]["time"].to_numpy()
+    plt.plot(all_n, all_time, ALL_SYM, color=all_color, label=all_label)

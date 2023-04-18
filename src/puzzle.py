@@ -28,12 +28,12 @@ class Puzzle:
         self.cost = -1
         self.blank_pos = (-1, -1)
         self.inversions = -1
+        self.board_size = -1
+        self.board = []
 
         # Generate a new solvable board if one was not provided, else set the given board
         if board is None:
-            self.board_size = size
-            self.board = [[-1 for _ in range(size)] for _ in range(size)]
-            self.generate()
+            self.generate(size)
         else:
             self.set_board(board)
 
@@ -74,7 +74,12 @@ class Puzzle:
         return False
 
     # Generate a new solvable board state
-    def generate(self):
+    def generate(self, new_size: int = None):
+        # Resize the board if necessary
+        if new_size is not None and new_size != self.board_size:
+            self.board_size = new_size
+            self.board = [[-1 for _ in range(new_size)] for _ in range(new_size)]
+
         sequence = list(range(self.board_size ** 2))
         shuffle(sequence)
 

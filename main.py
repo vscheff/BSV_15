@@ -15,25 +15,25 @@ def main():
 
     # Launch GUI
     if prompt_choice == 1:
-        engine = GraphicsEngine(Puzzle(size=get_int_from_user("Enter desired grid width: ", 1)))
+        engine = GraphicsEngine(Puzzle(size=get_int_from_user("Enter desired grid width", 1)))
         engine.launch_gui()
 
     # Plot Timing Data
     elif prompt_choice == 2:
-        plots = Plotting()
+        plots = Plotting(DEBUG)
 
         # Gather new experimental data if the user requests it
         if get_int_from_user("1. Generate and Plot New Data\n2. Plot existing data", 1, 2) == 1:
-            plots.get_experimental_data(DEBUG)
+            plots.get_experimental_data()
 
         plots.read_csv()
-        plots.plot_data(DEBUG)
-        plots.plot_all_data(DEBUG)
+        plots.plot_data()
+        plots.plot_data(True)
 
     # Import Test Puzzle
     else:
         puzzle = Puzzle(board=get_board_from_file())
-        num_tests = get_int_from_user("Enter desired number of tests: ", 1)
+        num_tests = get_int_from_user("Enter desired number of tests", 1)
         total_time = 0
 
         # Record time for each individual test run
