@@ -17,15 +17,17 @@ from src.thread import ThreadWithReturn
 
 # Constants
 FPS = 60                            # Target FPS for the game
-WINDOW_WIDTH = 1600                 # Width of the game window [pixels]
-WINDOW_HEIGHT = 900                 # Height of the game window [pixels]
+WINDOW_WIDTH = 1600                 # Initial width of the game window [pixels]
+WINDOW_HEIGHT = 900                 # Initial height of the game window [pixels]
 SAFE_WIDTH = 150                    # Min space required between sides of the window and the game board [pixels]
-SAFE_HEIGHT = 75                    # Min space required between top/bottom of the window and the game board [pixels]
+SAFE_HEIGHT = 125                   # Min space required between top/bottom of the window and the game board [pixels]
 GAME_FONT = "freesansbold.ttf"      # Font style used for in-game text
-BASIC_FONT_SIZE = 20                # Size of the font used for text not on tiles [pixels]
+BASIC_FONT_RATIO = 8                # Font used for in-game text will be this many times smaller than menu buttons
 TILE_FONT_RATIO = 4                 # Font used on tiles will be this many times smaller than the tile itself
 TILE_SPEED_RATIO = 10               # Speed the tile will move at when animated (smaller numbers = faster slide)
 BORDER_WIDTH = 4                    # Width of the border surrounding the game board
+BUTTON_SIZE_RATIO = 9               # In-game menu buttons will be this many times smaller than the screen
+TEXTBOX_SIZE_RATIO = 12             # In-game text boxes will be this many times smaller than the screen
 BUTTON_SIZE = (150, 75)             # Size of the in-game menu buttons [pixels]
 TEXTBOX_SIZE = (125, 50)            # Size of the in-game text boxes [pixels]
 BUTTON_SPACING = 25                 # Space between the in-game menu buttons [pixels]
@@ -89,7 +91,7 @@ class GraphicsEngine:
         pg.init()
         pg.display.set_icon(pg.image.load("icon.png"))
 
-        self.display = pg.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
+        self.display = pg.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT), RESIZABLE)
         self.fps_clock = pg.time.Clock()
         self.puzzle = Puzzle(size=INITIAL_GRID_SIZE)
         self.initial_board = self.puzzle.board
@@ -97,12 +99,12 @@ class GraphicsEngine:
         self.tile_size = 0
         self.tile_slide_speed = 0
         self.tile_font = None
+        self.x_margin = 0
+        self.y_margin = 0
 
         self.prepare_grid()
 
-        self.x_margin = (WINDOW_WIDTH - self.tile_size * self.board_size) // 2 - 1
-        self.y_margin = (WINDOW_HEIGHT - self.tile_size * self.board_size) // 2 - 1
-        self.basic_font = pg.font.Font(GAME_FONT, BASIC_FONT_SIZE)
+        self.basic_font = None
         self.top_message = None
         self.move_counter = None
         self.total_moves = 0
@@ -116,9 +118,13 @@ class GraphicsEngine:
 
     # Prepares various attributes to be appropriate for the selected board size
     def prepare_grid(self):
-        self.tile_size = (min(WINDOW_WIDTH - 150, WINDOW_HEIGHT - 75) - self.board_size + 1) // self.board_size
+        width, height = self.display.get_size()
+
+        self.tile_size = (min(width - SAFE_WIDTH, height - SAFE_HEIGHT) - self.board_size + 1) // self.board_size
         self.tile_font = pg.font.Font(GAME_FONT, self.tile_size // TILE_FONT_RATIO)
         self.tile_slide_speed = self.tile_size // TILE_SPEED_RATIO
+        self.x_margin = (width - self.tile_size * self.board_size) // 2 - 1
+        self.y_margin = (height - self.tile_size * self.board_size) // 2 - 1
 
     # Draws the base screen
     def draw_display(self):
@@ -126,33 +132,42 @@ class GraphicsEngine:
 
         # Draw starting condition of the game
         self.display.fill(BG_COLOR)
+        self.draw_menu()
         self.draw_message(MSG_INSTRUCTIONS)
         self.draw_move_count()
-        self.draw_menu()
 
     # Draws the in-game menu onto the screen
     def draw_menu(self):
         button_names = ("Solve", "Reset", "New Board")
         button_funcs = (self.find_solution, self.reset_puzzle, self.new_puzzle)
 
-        left_edge = WINDOW_WIDTH - (self.x_margin + BUTTON_SIZE[0]) // 2
+        # Calculate appropriate sizes for current screen size
+        width, height = self.display.get_size()
+        button_size = (width // BUTTON_SIZE_RATIO, height // BUTTON_SIZE_RATIO)
+        textbox_size = (width // TEXTBOX_SIZE_RATIO, height // TEXTBOX_SIZE_RATIO)
+        self.basic_font = pg.font.Font(GAME_FONT, button_size[0] // BASIC_FONT_RATIO)
+
+        left_edge = width - (self.x_margin + button_size[0]) // 2
         top_edge = self.y_margin
+
+        # Clear the buttons list of any previously drawn buttons
+        self.buttons = []
 
         # Create and draw a Button object for each menu button
         for name, func in zip(button_names, button_funcs):
-            self.draw_button(Button(pg.Rect(left_edge, top_edge, *BUTTON_SIZE), BUTTON_COLOR, name, func))
+            self.draw_button(Button(Rect(left_edge, top_edge, *button_size), BUTTON_COLOR, name, func))
 
-            top_edge += BUTTON_SPACING + BUTTON_SIZE[1]
+            top_edge += BUTTON_SPACING + button_size[1]
 
         # Draw label for the Board Size text box
-        rect = pg.Rect(left_edge, top_edge, *BUTTON_SIZE)
+        rect = Rect(left_edge, top_edge, *button_size)
         text = self.basic_font.render("Board Size", True, TEXT_COLOR)
         self.display.blit(text, text.get_rect(topleft=rect.topleft))
 
         top_edge += BUTTON_SPACING
 
         # Draw the Board Size text box
-        rect = pg.Rect(left_edge, top_edge, *TEXTBOX_SIZE)
+        rect = Rect(left_edge, top_edge, *textbox_size)
         text_box = TextBox(rect, ACTIVE_TEXTBOX_COLOR, BUTTON_COLOR, str(self.board_size), self.set_active_text_box)
         text_box.args = (text_box,)
         self.draw_button(text_box)
@@ -273,6 +288,12 @@ class GraphicsEngine:
         for event in pg.event.get():
             if event.type == QUIT:
                 terminate()
+
+            # User resized the screen
+            if event.type == VIDEORESIZE:
+                self.prepare_grid()
+                self.draw_display()
+                self.draw_board(self.puzzle.board)
 
             # User clicked on the screen
             elif event.type == MOUSEBUTTONUP:
