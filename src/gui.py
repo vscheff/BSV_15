@@ -100,8 +100,8 @@ class GraphicsEngine:
 
         self.prepare_grid()
 
-        self.x_margin = (WINDOW_WIDTH - self.tile_size * self.board_size) // 2
-        self.y_margin = (WINDOW_HEIGHT - self.tile_size * self.board_size) // 2
+        self.x_margin = (WINDOW_WIDTH - self.tile_size * self.board_size) // 2 - 1
+        self.y_margin = (WINDOW_HEIGHT - self.tile_size * self.board_size) // 2 - 1
         self.basic_font = pg.font.Font(GAME_FONT, BASIC_FONT_SIZE)
         self.top_message = None
         self.move_counter = None
@@ -202,10 +202,10 @@ class GraphicsEngine:
 
         # If the user has requested a new board size, update the board size and redraw the display
         if self.next_board_size is not None and self.board_size != self.next_board_size:
+            self.clear_board()
             self.board_size = self.next_board_size
             self.next_board_size = None
             self.prepare_grid()
-            self.draw_display()
 
         self.puzzle.generate(self.board_size)
         self.initial_board = self.puzzle.board
@@ -231,7 +231,9 @@ class GraphicsEngine:
         if self.next_board_size != int(text_box.text):
             text_box.text = str(self.next_board_size)
 
+        # Redraw the text box in its inactive state
         self.draw_button(text_box, append=False)
+        pg.display.update(text_box.rect)
 
     # Main execution loop of the GUI
     def launch_gui(self):
@@ -356,21 +358,23 @@ class GraphicsEngine:
     # Draws a game board to the window
     # param board - 2D array of integers representing the game board
     def draw_board(self, board: list):
-        left = self.x_margin - 1
-        top = self.y_margin - 1
-        width = self.board_size * self.tile_size
-        height = self.board_size * self.tile_size
-        border_offset = 2 * BORDER_WIDTH + self.board_size
-        border_rect = (left - BORDER_WIDTH, top - BORDER_WIDTH, width + border_offset, height + border_offset)
-
-        pg.draw.rect(self.display, BG_COLOR, (left, top, width + self.board_size, height + self.board_size))
-        pg.draw.rect(self.display, BORDER_COLOR, border_rect, BORDER_WIDTH)
+        # Clear previous game board and draw the border
+        pg.draw.rect(self.display, BORDER_COLOR, self.clear_board(), BORDER_WIDTH)
 
         # Draw each tile in the board
         for x in range(self.board_size):
             for y in range(self.board_size):
                 if board[y][x]:
                     self.draw_tile(x, y, board[y][x])
+
+    # Clears the game board in preparation for it to be drawn
+    # return rect - Rect object representing the are that was cleared
+    def clear_board(self) -> Rect:
+        size = self.board_size * (self.tile_size + 1) + 2 * BORDER_WIDTH
+        rect = Rect(self.x_margin - BORDER_WIDTH, self.y_margin - BORDER_WIDTH, size, size)
+        pg.draw.rect(self.display, BG_COLOR, rect)
+
+        return rect
 
     # Converts x and y pixel coordinates to x and y grid coordinates
     #  param              x - horizontal coordinate of the screen
@@ -390,7 +394,7 @@ class GraphicsEngine:
     # param x - horizontal grid coordinate of the tile
     # param y - vertical grid coordinate of the tile
     def get_left_top(self, x: int, y: int) -> tuple[int, int]:
-        return self.x_margin + (x * self.tile_size) + (x - 1), self.y_margin + (y * self.tile_size) + (y - 1)
+        return self.x_margin + (x * self.tile_size) + x, self.y_margin + (y * self.tile_size) + y
 
     # Draws a given tile onto the screen
     # param     x - horizontal grid coordinate of the tile
