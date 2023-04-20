@@ -124,10 +124,10 @@ class GraphicsEngine:
         self.x_margin = (width - self.tile_size * self.board_size) // 2 - 1
         self.y_margin = (height - self.tile_size * self.board_size) // 2 - 1
 
+        pg.display.set_caption(f"{self.board_size ** 2 - 1} Puzzle")
+    
     # Draws the base screen
     def draw_display(self):
-        pg.display.set_caption(f"{self.board_size ** 2 - 1} Puzzle")
-
         # Draw starting condition of the game
         self.display.fill(BG_COLOR)
         self.draw_menu()
