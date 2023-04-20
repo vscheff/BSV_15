@@ -89,7 +89,7 @@ KEY_MAP = {
 class GraphicsEngine:
     def __init__(self):
         pg.init()
-        pg.display.set_icon(pg.image.load("img/icon.png"))
+        pg.display.set_icon(pg.image.load("icon.png"))
 
         self.display = pg.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT), RESIZABLE)
         self.fps_clock = pg.time.Clock()
