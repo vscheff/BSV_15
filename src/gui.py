@@ -32,7 +32,7 @@ BORDER_WIDTH = 4                    # Width of the border surrounding the game b
 TOP_MESSAGE_OFFSET = (5, 5)         # Offset between the top message and the top-left corner of the screen [pixels]
 TOTAL_MOVES_OFFSET = 5              # Offset between the top message and the moves counter [pixels]
 INITIAL_GRID_SIZE = 4               # Grid size to use for puzzle when the game first starts
-MIN_GRID_SIZE = 1                   # Minimum grid size allowed for puzzles
+MIN_GRID_SIZE = 2                   # Minimum grid size allowed for puzzles
 MAX_GRID_SIZE = 128                 # Maximum grid size allowed for puzzles
 
 # In-Game Messages
