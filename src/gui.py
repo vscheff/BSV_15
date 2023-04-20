@@ -19,23 +19,21 @@ from src.thread import ThreadWithReturn
 FPS = 60                            # Target FPS for the game
 WINDOW_WIDTH = 1600                 # Initial width of the game window [pixels]
 WINDOW_HEIGHT = 900                 # Initial height of the game window [pixels]
-SAFE_WIDTH = 150                    # Min space required between sides of the window and the game board [pixels]
+SAFE_WIDTH = 275                    # Min space required between sides of the window and the game board [pixels]
 SAFE_HEIGHT = 125                   # Min space required between top/bottom of the window and the game board [pixels]
 GAME_FONT = "freesansbold.ttf"      # Font style used for in-game text
-BASIC_FONT_RATIO = 8                # Font used for in-game text will be this many times smaller than menu buttons
+BASIC_FONT_RATIO = 4                # Font used for in-game text will be this many times smaller than menu buttons
 TILE_FONT_RATIO = 4                 # Font used on tiles will be this many times smaller than the tile itself
 TILE_SPEED_RATIO = 10               # Speed the tile will move at when animated (smaller numbers = faster slide)
+BUTTON_SIZE_RATIO = (8, 11)         # In-game menu buttons will be this many times smaller than the screen
+TEXTBOX_SIZE_RATIO = (12, 14)       # In-game text boxes will be this many times smaller than the screen
+BUTTON_SPACING_RATIO = 3            # Spacing between the in-game menu buttons as a ratio to their height
 BORDER_WIDTH = 4                    # Width of the border surrounding the game board
-BUTTON_SIZE_RATIO = 9               # In-game menu buttons will be this many times smaller than the screen
-TEXTBOX_SIZE_RATIO = 12             # In-game text boxes will be this many times smaller than the screen
-BUTTON_SIZE = (150, 75)             # Size of the in-game menu buttons [pixels]
-TEXTBOX_SIZE = (125, 50)            # Size of the in-game text boxes [pixels]
-BUTTON_SPACING = 25                 # Space between the in-game menu buttons [pixels]
 TOP_MESSAGE_OFFSET = (5, 5)         # Offset between the top message and the top-left corner of the screen [pixels]
-TOTAL_MOVES_OFFSET = (5, 30)        # Offset between moves counter and the top-left corner of the screen [pixels]
+TOTAL_MOVES_OFFSET = 5              # Offset between the top message and the moves counter [pixels]
 INITIAL_GRID_SIZE = 4               # Grid size to use for puzzle when the game first starts
 MIN_GRID_SIZE = 1                   # Minimum grid size allowed for puzzles
-MAX_GRID_SIZE = 64                  # Maximum grid size allowed for puzzles
+MAX_GRID_SIZE = 128                 # Maximum grid size allowed for puzzles
 
 # In-Game Messages
 MSG_INSTRUCTIONS = "Click tiles next to empty space or press arrow keys to slide tiles."
@@ -45,10 +43,10 @@ MSG_SOLVING = "Solving the game board"
 
 # Color mapping (R, G, B)
 COLORS = {
-    "black": (0, 0, 0),
+    "black": (0,   0,   0),
     "white": (255, 255, 255),
-    "gold": (200, 180, 0),
-    "brown": (100, 50, 0)
+    "gold":  (200, 180, 0),
+    "brown": (100, 50,  0)
 }
 
 # Color constants
@@ -86,10 +84,12 @@ KEY_MAP = {
 # attr      total_moves - number of moves used since the initial board state
 # attr     THREAD_solve - Thread object used to solve the puzzle concurrently
 # attr          buttons - array of Button objects representing the in-game menu buttons
+# attr  active_text_box - current active text box that is handling user input
+# attr  next_board_size - user requested next board size that will be applied when "New Board" button is pressed
 class GraphicsEngine:
     def __init__(self):
         pg.init()
-        pg.display.set_icon(pg.image.load("icon.png"))
+        pg.display.set_icon(pg.image.load("img/icon.png"))
 
         self.display = pg.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT), RESIZABLE)
         self.fps_clock = pg.time.Clock()
@@ -101,9 +101,6 @@ class GraphicsEngine:
         self.tile_font = None
         self.x_margin = 0
         self.y_margin = 0
-
-        self.prepare_grid()
-
         self.basic_font = None
         self.top_message = None
         self.move_counter = None
@@ -113,6 +110,7 @@ class GraphicsEngine:
         self.active_text_box = None
         self.next_board_size = None
 
+        self.prepare_grid()
         self.draw_display()
         self.draw_board(self.puzzle.board)
 
@@ -122,7 +120,7 @@ class GraphicsEngine:
 
         self.tile_size = (min(width - SAFE_WIDTH, height - SAFE_HEIGHT) - self.board_size + 1) // self.board_size
         self.tile_font = pg.font.Font(GAME_FONT, self.tile_size // TILE_FONT_RATIO)
-        self.tile_slide_speed = self.tile_size // TILE_SPEED_RATIO
+        self.tile_slide_speed = max(1, self.tile_size // TILE_SPEED_RATIO)
         self.x_margin = (width - self.tile_size * self.board_size) // 2 - 1
         self.y_margin = (height - self.tile_size * self.board_size) // 2 - 1
 
@@ -143,9 +141,10 @@ class GraphicsEngine:
 
         # Calculate appropriate sizes for current screen size
         width, height = self.display.get_size()
-        button_size = (width // BUTTON_SIZE_RATIO, height // BUTTON_SIZE_RATIO)
-        textbox_size = (width // TEXTBOX_SIZE_RATIO, height // TEXTBOX_SIZE_RATIO)
-        self.basic_font = pg.font.Font(GAME_FONT, button_size[0] // BASIC_FONT_RATIO)
+        button_size = (width // BUTTON_SIZE_RATIO[0], height // BUTTON_SIZE_RATIO[1])
+        textbox_size = (width // TEXTBOX_SIZE_RATIO[0], height // TEXTBOX_SIZE_RATIO[1])
+        self.basic_font = pg.font.Font(GAME_FONT, min(*button_size) // BASIC_FONT_RATIO)
+        button_spacing = button_size[1] // BUTTON_SPACING_RATIO
 
         left_edge = width - (self.x_margin + button_size[0]) // 2
         top_edge = self.y_margin
@@ -157,14 +156,14 @@ class GraphicsEngine:
         for name, func in zip(button_names, button_funcs):
             self.draw_button(Button(Rect(left_edge, top_edge, *button_size), BUTTON_COLOR, name, func))
 
-            top_edge += BUTTON_SPACING + button_size[1]
+            top_edge += button_spacing + button_size[1]
 
         # Draw label for the Board Size text box
         rect = Rect(left_edge, top_edge, *button_size)
         text = self.basic_font.render("Board Size", True, TEXT_COLOR)
         self.display.blit(text, text.get_rect(topleft=rect.topleft))
 
-        top_edge += BUTTON_SPACING
+        top_edge += button_spacing
 
         # Draw the Board Size text box
         rect = Rect(left_edge, top_edge, *textbox_size)
@@ -279,18 +278,24 @@ class GraphicsEngine:
             self.fps_clock.tick(FPS)
 
     # Handles and clears the event queue
-    # return slide_to - integer representing the direction the user wishes to move a tile
-    # return     None - if user did not request a tile move
-    def event_handler(self) -> int | None:
+    #  param allow_updates - indicates whether board updates should happen during this call
+    # return      slide_to - integer representing the direction the user wishes to move a tile
+    # return          None - if user did not request a tile move
+    def event_handler(self, allow_updates: bool = True) -> int | None:
         slide_to = None
 
-        # Look through each even in the queue
+        # Look through each event in the queue
         for event in pg.event.get():
             if event.type == QUIT:
                 terminate()
 
             # User resized the screen
             if event.type == VIDEORESIZE:
+                # Set these to None to prevent phantom rects from being drawn over text
+                self.top_message = None
+                self.move_counter = None
+
+                # Redraw the screen
                 self.prepare_grid()
                 self.draw_display()
                 self.draw_board(self.puzzle.board)
@@ -299,6 +304,10 @@ class GraphicsEngine:
             elif event.type == MOUSEBUTTONUP:
                 if self.active_text_box is not None:
                     self.reset_active_text_box()
+
+                if not allow_updates:
+                    continue
+
                 # Check if the user clicked any of the in-game menu buttons
                 for button in self.buttons:
                     if button.rect.collidepoint(*event.pos):
@@ -443,13 +452,14 @@ class GraphicsEngine:
 
         self.top_message = text_rect
 
-    # Draw the "Total Moves" counter
+    # Draws the "Total Moves" counter
     def draw_move_count(self):
         if self.move_counter is not None:
             pg.draw.rect(self.display, BG_COLOR, self.move_counter)
 
         message_str = f"Total Moves: {str(self.total_moves)}"
-        text_surf, text_rect = self.make_text(message_str, TEXT_COLOR, BG_COLOR, *TOTAL_MOVES_OFFSET)
+        top_left = TOP_MESSAGE_OFFSET[0], self.basic_font.get_height() + TOP_MESSAGE_OFFSET[1] + TOTAL_MOVES_OFFSET
+        text_surf, text_rect = self.make_text(message_str, TEXT_COLOR, BG_COLOR, *top_left)
         self.display.blit(text_surf, text_rect)
 
         self.move_counter = text_rect
@@ -487,30 +497,10 @@ class GraphicsEngine:
             self.draw_move_count()
             pg.display.flip()
             self.fps_clock.tick(FPS)
-            quit_check()
+            self.event_handler(False)
 
 
 # Terminates the GUI
 def terminate():
     pg.quit()
     exit('\nProgram Quit... Good Bye!')
-
-
-# Checks if the user selected the quit button
-# return  True - if the user requested to quit
-# return False - if the user did not request to quit
-def quit_check() -> bool:
-    # get all QUIT events
-    if pg.event.get(QUIT):
-        terminate()
-        return True
-
-    # Look through all KEYUP events and check if user pressed the Esc key
-    for event in pg.event.get(KEYUP):
-        if event.key == K_ESCAPE:
-            terminate()
-            return True
-        # put other KEYUP event objects back into the queue
-        pg.event.post(event)
-
-    return False
