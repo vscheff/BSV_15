@@ -198,7 +198,7 @@ def solve_puzzle(puzzle: Puzzle) -> Puzzle | None:
         for direction in UP, DOWN, LEFT, RIGHT:
             new_board = current_node.move(direction)
             if new_board and (board_str := str(new_board)) not in checked_boards:
-                live_nodes.insert(Puzzle(new_board, puzzle.board_size, current_node))
+                live_nodes.insert(Puzzle(board=new_board, parent=current_node))
                 checked_boards[board_str] = True
 
     print("\nNo solution found! Are you sure the puzzle was solvable?")
