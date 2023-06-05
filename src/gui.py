@@ -240,14 +240,21 @@ class GraphicsEngine:
         text_box = self.active_text_box
         self.active_text_box = None
 
+        if text_box.is_empty():
+            text_box.revert_changes()
+
         # Ensure new board size is within allotted range
         self.next_board_size = min(MAX_GRID_SIZE, max(MIN_GRID_SIZE, int(text_box.text)))
         if self.next_board_size != int(text_box.text):
             text_box.text = str(self.next_board_size)
 
+        text_box.commit_changes()
+
         # Redraw the text box in its inactive state
         self.draw_button(text_box, append=False)
         pg.display.update(text_box.rect)
+
+        
 
     # Main execution loop of the GUI
     def launch_gui(self):

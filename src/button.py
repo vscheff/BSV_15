@@ -28,6 +28,7 @@ class Button:
 
 # Used by the GUI to hold attributes related to in-game text boxes
 # attr active_color - color for the background of the text box when it is accepting user input
+# attr  text_backup - used to revert changes when the user leaves a textbox empty
 class TextBox(Button):
     def __init__(self, rect: Rect, active_color: tuple, inactive_color: tuple,
                  text: str, func: Callable, args: tuple = (), kwargs: dict = None):
@@ -35,6 +36,7 @@ class TextBox(Button):
         super().__init__(rect, inactive_color, text, func, args, kwargs)
 
         self.active_color = active_color
+        self.text_backup = text
 
     # Handles key presses when the text box is active
     #  param key_event - KEYUP event
@@ -53,3 +55,12 @@ class TextBox(Button):
             return True
 
         return False
+
+    def is_empty(self) -> bool:
+        return not bool(self.text)
+
+    def commit_changes(self):
+        self.text_backup = self.text
+
+    def revert_changes(self):
+        self.text = self.text_backup

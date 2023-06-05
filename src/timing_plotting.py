@@ -36,31 +36,29 @@ colors = {
 
 
 # Holds all attributes and methods necessary to gather and plot experimental timing data
+# attr      debug - enables debug mode when True
 # attr       user - username of the user executing the program
 # attr      users - list of power users and current user
 # attr dataframes - dictionary of dataframes for each user
-# attr      debug - enables debug mode when True
 class Plotting:
     def __init__(self, debug: bool):
+        self.debug = debug
+        
         # Force user to enter a non-empty string for their username
         self.user = ""
         while not self.user:
             self.user = input("\nEnter your username: ").lower()
 
         self.users = [i for i in POWER_USERS]
+        if self.user not in self.users:
+            self.users.append(self.user)
 
-        # Add dataframes for new data, for each power user, and for the current user
+        # Add dataframes for each power user and for the current user
         self.dataframes = {name:
                            {"all":  pd.DataFrame(columns=['n', "time"]),
                             "mean": pd.DataFrame(columns=['n', "time"])}
-                           for name in POWER_USERS
+                           for name in self.users
                            }
-        if self.user not in self.dataframes:
-            self.dataframes[self.user] = {"all":  pd.DataFrame(columns=['n', "time"]),
-                                          "mean": pd.DataFrame(columns=['n', "time"])}
-            self.users.append(self.user)
-
-        self.debug = debug
 
     # Add the timing data of an individual run to the input dataframe
     def add_numbers_to_dataframe(self, n: int, time: int):
