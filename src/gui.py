@@ -254,8 +254,6 @@ class GraphicsEngine:
         self.draw_button(text_box, append=False)
         pg.display.update(text_box.rect)
 
-        
-
     # Main execution loop of the GUI
     def launch_gui(self):
         while True:

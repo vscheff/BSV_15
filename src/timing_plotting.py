@@ -23,7 +23,7 @@ Y_AXIS = "Time [ns]"
 CHART_TITLE = "n-Puzzle Solver Algorithm Analysis\nGrid Size vs Time Required"
 
 # Color mapping (hex color codes)
-colors = {
+COLORS = {
     "blue":         "#2471a3",
     "light_blue":   "#a9cce3",
     "yellow":       "#d4ac0d",
@@ -49,7 +49,7 @@ class Plotting:
         while not self.user:
             self.user = input("\nEnter your username: ").lower()
 
-        self.users = [i for i in POWER_USERS]
+        self.users = list(POWER_USERS)
         if self.user not in self.users:
             self.users.append(self.user)
 
@@ -90,11 +90,11 @@ class Plotting:
 
         if plot_all:
             # Plot the dataframe for each user, iterating through the color dictionary for their plot colors
-            keys = iter(colors.keys())
+            colors = iter(COLORS.values())
             for usr in self.users:
-                plot_df(self.dataframes[usr], colors[next(keys)], f"{usr}_mean", colors[next(keys)], f"{usr}_all")
+                plot_df(self.dataframes[usr], next(colors), f"{usr}_mean", next(colors), f"{usr}_all")
         else:
-            plot_df(self.dataframes[self.user], colors["blue"], "Mean time", colors["orange"], "All times")
+            plot_df(self.dataframes[self.user], COLORS["blue"], "Mean time", COLORS["orange"], "All times")
 
         # Configure plot options
         plt.xlabel(X_AXIS)
